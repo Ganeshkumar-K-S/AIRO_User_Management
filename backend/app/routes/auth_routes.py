@@ -20,3 +20,5 @@ async def login(
         raise HTTPException(401, "Invalid credentials")
     
     return {"message" : "Login successfull"}
+
+# @auth_router.post("/register")
