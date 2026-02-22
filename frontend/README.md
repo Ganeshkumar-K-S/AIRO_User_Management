@@ -1,36 +1,95 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Finnger — Files to Add
 
-## Getting Started
+Drop these files into your existing Next.js project.
 
-First, run the development server:
+## Where each file goes
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+```
+your-project/
+├── .env.local                          ← ADD (create if missing)
+│
+├── app/
+│   ├── layout.tsx                      ← REPLACE
+│   ├── page.tsx                        ← REPLACE (redirects to /login)
+│   ├── login/
+│   │   └── page.tsx                    ← ADD (create folder + file)
+│   ├── signup/
+│   │   └── page.tsx                    ← ADD
+│   ├── otp/
+│   │   └── page.tsx                    ← ADD
+│   └── home/
+│       └── page.tsx                    ← ADD
+│
+├── components/
+│   └── AuthLayout.tsx                  ← ADD (create folder + file)
+│
+├── lib/
+│   └── api.ts                          ← ADD (create folder + file)
+│
+└── styles/
+    └── globals.css                     ← ADD (create folder + file)
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## ✅ JWT — How it works
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**Login / OTP success** → `saveAuth(token, email, name)` stores:
+```
+localStorage['access_token'] = "eyJhbGci..."
+localStorage['user_email']   = "user@example.com"
+localStorage['user_name']    = "Stanley"
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**Every protected API call** uses `apiGet()` / `apiPostAuth()` / `apiPatch()`:
+```
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+```
 
-## Learn More
+**Public calls** (login, signup, send-otp) use `apiPost()` — no JWT needed.
 
-To learn more about Next.js, take a look at the following resources:
+## ⚠️ Add CORS to your FastAPI main.py
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```python
+from fastapi.middleware.cors import CORSMiddleware
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["http://localhost:3000"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+```
 
-## Deploy on Vercel
+## Run
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm install
+npm run dev
+# → http://localhost:3000
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Auth Flow
+
+```
+/signup  →  fill form  →  POST /auth/send-otp  →  /otp
+/otp     →  enter code →  POST /auth/signup
+                        →  POST /auth/login (auto)
+                        →  JWT saved  →  /home
+
+/login   →  fill form  →  POST /auth/login
+                        →  JWT saved  →  /home
+```
+
+## Your tailwind.config.js — make sure content includes app/
+
+```js
+module.exports = {
+  content: [
+    './app/**/*.{js,ts,jsx,tsx}',
+    './components/**/*.{js,ts,jsx,tsx}',
+    './styles/**/*.css',
+  ],
+  theme: { extend: {} },
+  plugins: [],
+}
+```
