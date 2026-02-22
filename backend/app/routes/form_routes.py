@@ -82,4 +82,30 @@ async def update_profile(
         raise e
 
     except Exception as e:
-        raise HTTPException(500, f"Server error: {str(e)}")
+        raise HTTPException(500, f"Server error: {str(e)}")  
+    
+@form_router.get("/get-profile/{email}")
+async def get_profile(
+    email: str,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    try:
+        user_data = await db.users.find_one({
+            "email" : email
+        })
+
+        if not user_data:
+            raise HTTPException(
+                status_code = 404, detail = "user not found"
+            )
+        
+        user_data.pop("_id", None)
+
+        return user_data
+    except Exception as e:
+        return JSONResponse(
+            status_code = e.status_code,
+            content = {
+                "message" : str(e)
+            }
+        )
