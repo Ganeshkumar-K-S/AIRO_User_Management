@@ -1,11 +1,11 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
-from app.models.form_models import EducationModel
+from app.models.form_models import EducationModel, ProfileUpdate
 from typing import Annotated, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.connection import get_db
 
-form_router = APIRouter("/form")
+form_router = APIRouter(prefix = "/form")
 
 @form_router.get("/education/{email}")
 async def get_education(
@@ -39,9 +39,9 @@ async def update_education(
 
         user = await db.users.find_one({"email": user_email})
         if not user:
-            raise HTTPException(status_code=404, detail="User not found")
+            raise HTTPException(404, "User not found")
 
-        education_docs = [dict(item) for item in data]
+        education_docs = [item.model_dump(exclude_none=True) for item in data]
 
         await db.users.update_one(
             {"email": user_email},
@@ -54,7 +54,32 @@ async def update_education(
         raise e
 
     except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail=f"Internal Server Error: {str(e)}"
+        raise HTTPException(500, f"Internal Server Error: {str(e)}")
+    
+@form_router.patch("/update-profile")
+async def update_profile(
+    data: ProfileUpdate,
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+
+    try:
+        email = request.state.user["email"]
+
+        update_data = data.model_dump(exclude_none=True)
+
+        if not update_data:
+            raise HTTPException(400, "No data provided")
+
+        await db.users.update_one(
+            {"email": email},
+            {"$set": update_data}
         )
+
+        return {"message": "Profile updated successfully"}
+
+    except HTTPException as e:
+        raise e
+
+    except Exception as e:
+        raise HTTPException(500, f"Server error: {str(e)}")
