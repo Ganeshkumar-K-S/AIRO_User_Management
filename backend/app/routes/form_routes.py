@@ -1,10 +1,14 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
 from app.models.form_models import EducationModel, ProfileUpdate
+from app.models.dev_models import GithubLinkRequest, GithubCodeRequest
 from typing import Annotated, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.connection import get_db
-
+from app.services.external_fetch.github_fetch import fetch_github
+import random
+import string
+from datetime import datetime
 form_router = APIRouter(prefix = "/form")
 
 @form_router.get("/education/{email}")
@@ -108,4 +112,128 @@ async def get_profile(
             content = {
                 "message" : str(e)
             }
+        )
+# Development
+@form_router.post("/github/getcode")
+async def get_git_code(
+    data: GithubCodeRequest,
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    email = request.state.user["email"]
+
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+
+    await db.github_verification.update_one(
+        {"email": email},
+        {
+            "$set": {
+                "email": email,
+                "github_id": data.github_id,
+                "code": code,
+                "created_at": datetime.now()
+            }
+        },
+        upsert=True
+    )
+
+    return {"verification_code": code}
+
+@form_router.post("/github/link")
+async def link_github(
+    data: GithubLinkRequest,
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    try:
+        email = request.state.user["email"]
+
+        record = await db.github_verification.find_one({
+            "email": email,
+            "github_id": data.github_id,
+            "code": data.code
+        })
+
+        if not record:
+            raise HTTPException(400, "Invalid verification code")
+
+        github_data = await fetch_github(data.github_id)
+
+        if not github_data or "error" in github_data:
+            raise HTTPException(404, "GitHub user not found")
+
+        bio = github_data.get("bio", "")
+
+        if data.code not in bio:
+            raise HTTPException(401, "Code not found in GitHub bio")
+
+        await db.dev.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "email": email,
+                    "github": github_data,
+                    "updated_at": datetime.utcnow()
+                },
+                "$setOnInsert": {
+                    "created_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+
+        await db.github_verification.delete_many({"email": email})
+
+        return {"message": "GitHub linked successfully"}
+
+    except HTTPException as e:
+        return JSONResponse(
+            status_code = e.status_code,
+            content = {
+                "message" : str(e)
+            }
+        )
+
+@form_router.patch("/github/update")
+async def update_github(
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    try:
+        email = request.state.user["email"]
+
+        record = await db.dev.find_one({"email": email})
+
+        if not record or "github" not in record:
+            raise HTTPException(404, "GitHub account not linked")
+
+        github_id = record["github"]["username"]
+
+        github_data = await fetch_github(github_id)
+
+        if not github_data or "error" in github_data:
+            raise HTTPException(404, "GitHub user not found")
+
+        await db.dev.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "github": github_data,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        return {"message": "GitHub data updated successfully"}
+
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"message": str(e)}
+        )
+
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal server error"}
         )
