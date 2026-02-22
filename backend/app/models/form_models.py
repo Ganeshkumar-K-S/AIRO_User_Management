@@ -49,3 +49,4 @@ class ProfileUpdate(BaseModel):
     achievements: Optional[List[Achievement]] = None
     experience: Optional[List[Experience]] = None
     certifications: Optional[List[Certification]] = None
+    education: Optional[List[EducationModel]] = None

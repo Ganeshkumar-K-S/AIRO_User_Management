@@ -94,25 +94,36 @@ async def get_profile(
     db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
 ):
     try:
-        user_data = await db.users.find_one({
-            "email" : email
-        })
+        user_data = await db.users.find_one({"email": email})
 
         if not user_data:
-            raise HTTPException(
-                status_code = 404, detail = "user not found"
-            )
-        
+            raise HTTPException(status_code=404, detail="user not found")
+
         user_data.pop("_id", None)
 
+        # BUG FIX: GitHub data is stored in db.dev (separate collection),
+        # not in db.users. Merge it in here so the frontend gets everything
+        # from a single endpoint call.
+        dev_data = await db.dev.find_one({"email": email})
+        if dev_data:
+            dev_data.pop("_id", None)
+            dev_data.pop("email", None)
+            dev_data.pop("created_at", None)
+            dev_data.pop("updated_at", None)
+            user_data.update(dev_data)  # merges github key into response
+
         return user_data
+
+    except HTTPException as e:
+        raise e
+
     except Exception as e:
         return JSONResponse(
-            status_code = e.status_code,
-            content = {
-                "message" : str(e)
-            }
+            status_code=500,
+            content={"message": f"Internal server error: {str(e)}"}
         )
+
+
 # Development
 @form_router.post("/github/getcode")
 async def get_git_code(
@@ -162,7 +173,11 @@ async def link_github(
         if not github_data or "error" in github_data:
             raise HTTPException(404, "GitHub user not found")
 
-        bio = github_data.get("bio", "")
+        # BUG FIX: GitHub API returns `"bio": null` for users with no bio set.
+        # dict.get("bio", "") only uses the fallback when the KEY is missing,
+        # not when it's present but null. So bio could still be None here,
+        # causing `data.code not in bio` to raise TypeError.
+        bio = github_data.get("bio") or ""
 
         if data.code not in bio:
             raise HTTPException(401, "Code not found in GitHub bio")
@@ -187,11 +202,17 @@ async def link_github(
         return {"message": "GitHub linked successfully"}
 
     except HTTPException as e:
+        # BUG FIX: str(HTTPException) gives the full object repr, not the detail
+        # message. Use e.detail to get the actual error string.
         return JSONResponse(
-            status_code = e.status_code,
-            content = {
-                "message" : str(e)
-            }
+            status_code=e.status_code,
+            content={"message": e.detail}
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"message": f"Internal server error: {str(e)}"}
         )
 
 @form_router.patch("/github/update")
@@ -229,7 +250,7 @@ async def update_github(
     except HTTPException as e:
         return JSONResponse(
             status_code=e.status_code,
-            content={"message": str(e)}
+            content={"message": e.detail}  # BUG FIX: was str(e), now e.detail
         )
 
     except Exception:
