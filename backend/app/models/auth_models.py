@@ -11,6 +11,8 @@ class VerifyOTP(BaseModel):
     email : EmailStr 
     otp: str 
 
-class RegisterUser(BaseModel):
-    email : EmailStr 
-    password : str
+class SignupRequest(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    otp: str
