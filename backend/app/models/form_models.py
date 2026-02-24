@@ -3,12 +3,12 @@ from typing import List, Optional
 from datetime import datetime
 
 class EducationModel(BaseModel):
-    degree: str 
+    degree: str
     branch: str
-    institution : str 
-    cgpa: float | None 
-    start_year: int | None 
-    end_year: int | None 
+    institution: str
+    cgpa: Optional[float] = None
+    start_year: Optional[int] = None
+    end_year: Optional[int] = None
 
 class Skill(BaseModel):
     name: str
@@ -28,11 +28,11 @@ class Achievement(BaseModel):
     date: Optional[datetime] = None
 
 class Experience(BaseModel):
-    role: Optional[str]
-    company: Optional[str]
-    start_date: Optional[datetime]
-    end_date: Optional[datetime]
-    description: Optional[str]
+    role: Optional[str] = None
+    company: Optional[str] = None
+    start_date: Optional[datetime] = None
+    end_date: Optional[datetime] = None
+    description: Optional[str] = None
 
 class Certification(BaseModel):
     title: Optional[str]
