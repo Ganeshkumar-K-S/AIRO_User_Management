@@ -1,7 +1,7 @@
 fastapi
 motor
 uvicorn
-bcrpyt
+bcrypt
 fastapi-mail
 bs4
 kaggle

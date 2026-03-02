@@ -58,3 +58,6 @@ class LeetcodeCodeRequest(BaseModel):
 class LeetcodeLinkRequest(BaseModel):
     leetcode_id: str 
     code: str 
+
+class LinkedinAddRequest(BaseModel):
+    linkedin_url: str
