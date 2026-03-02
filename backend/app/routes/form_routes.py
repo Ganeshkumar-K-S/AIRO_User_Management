@@ -10,8 +10,16 @@ from app.services.external_fetch.leetcode_fetch import fetch_leetcode
 import random
 import string
 from datetime import datetime
+import httpx
 
 form_router = APIRouter(prefix = "/form")
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 @form_router.get("/education/{email}")
 async def get_education(
