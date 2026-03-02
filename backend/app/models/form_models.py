@@ -61,3 +61,6 @@ class LeetcodeLinkRequest(BaseModel):
 
 class LinkedinAddRequest(BaseModel):
     linkedin_url: str
+
+class SummaryUpdate(BaseModel):
+    professional_summary: str

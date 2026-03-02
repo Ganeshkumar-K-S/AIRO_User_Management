@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
-from app.models.form_models import EducationModel, ProfileUpdate, LeetcodeCodeRequest, LeetcodeLinkRequest, LinkedinAddRequest
+from app.models.form_models import EducationModel, ProfileUpdate, LeetcodeCodeRequest, LeetcodeLinkRequest, LinkedinAddRequest, SummaryUpdate
 from app.models.dev_models import GithubLinkRequest, GithubCodeRequest
 from typing import Annotated, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -484,4 +484,125 @@ async def generate_profile(
         return JSONResponse(
             status_code=500,
             content={"message": "Internal Server Error"}
+        )
+
+@form_router.get("/github/contributions/{username}")
+async def get_contributions(username: str):
+    from app.core.config import settings
+
+    query = """
+    query($login: String!) {
+      user(login: $login) {
+        contributionsCollection {
+          contributionCalendar {
+            totalContributions
+            weeks {
+              contributionDays {
+                date
+                contributionCount
+                contributionLevel
+              }
+            }
+          }
+        }
+      }
+    }
+    """
+
+    LEVEL_MAP = {
+        "NONE":           0,
+        "FIRST_QUARTILE": 1,
+        "SECOND_QUARTILE": 2,
+        "THIRD_QUARTILE": 3,
+        "FOURTH_QUARTILE": 4,
+    }
+
+    headers = {
+        "Authorization": f"bearer {GITHUB_TOKEN}",
+        "Content-Type": "application/json",
+    }
+
+    try:
+        async with httpx.AsyncClient(timeout=10) as client:
+            res = await client.post(
+                "https://api.github.com/graphql",
+                json={"query": query, "variables": {"login": username}},
+                headers=headers,
+            )
+
+        if res.status_code != 200:
+            raise HTTPException(502, "GitHub API error")
+
+        data = res.json()
+
+        if "errors" in data:
+            raise HTTPException(404, "GitHub user not found")
+
+        calendar = (
+            data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+        )
+
+        weeks = []
+        for week in calendar["weeks"]:
+            days = []
+            for day in week["contributionDays"]:
+                days.append({
+                    "date":  day["date"],
+                    "count": day["contributionCount"],
+                    "level": LEVEL_MAP.get(day["contributionLevel"], 0),
+                })
+            weeks.append({"days": days})
+
+        return {
+            "total_contributions": calendar["totalContributions"],
+            "weeks": weeks,
+        }
+
+    except HTTPException:
+        raise
+
+    except httpx.TimeoutException:
+        raise HTTPException(504, "GitHub request timed out")
+
+    except Exception as e:
+        raise HTTPException(500, f"Internal error: {str(e)}")
+    
+
+@form_router.patch("/update-summary")
+async def update_summary(
+    data: SummaryUpdate,
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    try:
+        email = request.state.user["email"]
+
+        if not data.professional_summary.strip():
+            raise HTTPException(400, "Summary cannot be empty")
+
+        result = await db.users.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "professional_summary": data.professional_summary,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        if result.matched_count == 0:
+            raise HTTPException(404, "User not found")
+
+        return {"message": "Professional summary updated successfully"}
+
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"message": e.detail}
+        )
+
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal server error"}
         )
