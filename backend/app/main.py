@@ -12,7 +12,7 @@ app = FastAPI()
 
 @app.get("/")
 def health():
-    return {"status": "running"}
+    return {"status" : "running"}
 
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RateLimitMiddleware)
