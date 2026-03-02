@@ -10,6 +10,10 @@ from app.routes.form_routes import form_router
 
 app = FastAPI()
 
+@app.get("/")
+def health():
+    return {"status" : "running"}
+
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(LoggingMiddleware)
