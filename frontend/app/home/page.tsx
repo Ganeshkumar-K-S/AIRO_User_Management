@@ -70,6 +70,8 @@ export function Navbar({ active }: { active?: string }) {
         <button key={label} onClick={() => {
           if (label === 'Dashboard') router.push('/home');
           if (label === 'Development') router.push('/development');
+          if (label === 'Machine Learning') router.push('/profile/ml');
+          if (label === 'DSA') router.push('/dsa');
         }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: active === label ? C.accent : C.muted, fontWeight: active === label ? 700 : 500, borderBottom: active === label ? `2.5px solid ${C.accent}` : '2.5px solid transparent', paddingBottom: 4, transition: 'all 0.2s' }}>
           {label}
         </button>
