@@ -50,3 +50,11 @@ class ProfileUpdate(BaseModel):
     experience: Optional[List[Experience]] = None
     certifications: Optional[List[Certification]] = None
     education: Optional[List[EducationModel]] = None
+
+
+class LeetcodeCodeRequest(BaseModel):
+    leetcode_id: str 
+
+class LeetcodeLinkRequest(BaseModel):
+    leetcode_id: str 
+    code: str 

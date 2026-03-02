@@ -1,11 +1,12 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
-from app.models.form_models import EducationModel, ProfileUpdate
+from app.models.form_models import EducationModel, ProfileUpdate, LeetcodeCodeRequest, LeetcodeLinkRequest
 from app.models.dev_models import GithubLinkRequest, GithubCodeRequest
 from typing import Annotated, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from app.db.connection import get_db
 from app.services.external_fetch.github_fetch import fetch_github
+from app.services.external_fetch.leetcode_fetch import fetch_leetcode
 import random
 import string
 from datetime import datetime
@@ -267,97 +268,131 @@ async def update_github(
             status_code=500,
             content={"message": "Internal server error"}
         )
+    
+@form_router.post("/leetcode/getcode")
+async def get_leetcode_code(
+    data: LeetcodeCodeRequest,
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    email = request.state.user["email"]
 
-"""
-ADD THIS ROUTE TO form_routes.py
-Add this import at the top of form_routes.py:
-  import httpx
-  from collections import defaultdict
-"""
+    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
-# ── Add this import block at the top of form_routes.py alongside existing imports ──
-# import httpx
-# from collections import defaultdict
-
-# ── Add this route inside form_routes.py ──
-
-@form_router.get("/github/contributions/{username}")
-async def get_contributions(username: str):
-    from app.core.config import settings
-
-    query = """
-    query($login: String!) {
-      user(login: $login) {
-        contributionsCollection {
-          contributionCalendar {
-            totalContributions
-            weeks {
-              contributionDays {
-                date
-                contributionCount
-                contributionLevel
-              }
+    await db.leetcode_verification.update_one(
+        {"email": email},
+        {
+            "$set": {
+                "email": email,
+                "leetcode_id": data.leetcode_id,
+                "code": code,
+                "created_at": datetime.utcnow()
             }
-          }
-        }
-      }
-    }
-    """
+        },
+        upsert=True
+    )
 
-    LEVEL_MAP = {
-        "NONE":           0,
-        "FIRST_QUARTILE": 1,
-        "SECOND_QUARTILE": 2,
-        "THIRD_QUARTILE": 3,
-        "FOURTH_QUARTILE": 4,
-    }
+    return {"verification_code": code}
 
-    headers = {
-        "Authorization": f"bearer {GITHUB_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
+@form_router.post("/leetcode/link")
+async def link_leetcode(
+    data: LeetcodeLinkRequest,
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
     try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            res = await client.post(
-                "https://api.github.com/graphql",
-                json={"query": query, "variables": {"login": username}},
-                headers=headers,
-            )
+        email = request.state.user["email"]
 
-        if res.status_code != 200:
-            raise HTTPException(502, "GitHub API error")
+        record = await db.leetcode_verification.find_one({
+            "email": email,
+            "leetcode_id": data.leetcode_id,
+            "code": data.code
+        })
 
-        data = res.json()
+        if not record:
+            raise HTTPException(400, "Invalid verification code")
 
-        if "errors" in data:
-            raise HTTPException(404, "GitHub user not found")
+        leetcode_data = await fetch_leetcode(data.leetcode_id)
 
-        calendar = (
-            data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
+        if not leetcode_data or "error" in leetcode_data:
+            raise HTTPException(404, "LeetCode user not found")
+
+        bio = leetcode_data.get("about") or ""
+
+        if data.code not in bio:
+            raise HTTPException(401, "Code not found in LeetCode bio")
+
+        await db.dev.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "email": email,
+                    "leetcode": leetcode_data,
+                    "updated_at": datetime.utcnow()
+                },
+                "$setOnInsert": {
+                    "created_at": datetime.utcnow()
+                }
+            },
+            upsert=True
         )
 
-        weeks = []
-        for week in calendar["weeks"]:
-            days = []
-            for day in week["contributionDays"]:
-                days.append({
-                    "date":  day["date"],
-                    "count": day["contributionCount"],
-                    "level": LEVEL_MAP.get(day["contributionLevel"], 0),
-                })
-            weeks.append({"days": days})
+        await db.leetcode_verification.delete_many({"email": email})
 
-        return {
-            "total_contributions": calendar["totalContributions"],
-            "weeks": weeks,
-        }
+        return {"message": "LeetCode linked successfully"}
 
-    except HTTPException:
-        raise
-
-    except httpx.TimeoutException:
-        raise HTTPException(504, "GitHub request timed out")
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"message": e.detail}
+        )
 
     except Exception as e:
-        raise HTTPException(500, f"Internal error: {str(e)}")
+        return JSONResponse(
+            status_code=500,
+            content={"message": f"Internal server error: {str(e)}"}
+        )
+    
+@form_router.patch("/leetcode/update")
+async def update_leetcode(
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    try:
+        email = request.state.user["email"]
+
+        record = await db.dev.find_one({"email": email})
+
+        if not record or "leetcode" not in record:
+            raise HTTPException(404, "LeetCode account not linked")
+
+        leetcode_id = record["leetcode"]["username"]
+
+        leetcode_data = await fetch_leetcode(leetcode_id)
+
+        if not leetcode_data or "error" in leetcode_data:
+            raise HTTPException(404, "LeetCode user not found")
+
+        await db.dev.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "leetcode": leetcode_data,
+                    "updated_at": datetime.utcnow()
+                }
+            }
+        )
+
+        return {"message": "LeetCode data updated successfully"}
+
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"message": e.detail}
+        )
+
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal server error"}
+        )

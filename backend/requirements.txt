@@ -3,3 +3,5 @@ motor
 uvicorn
 bcrpyt
 fastapi-mail
+bs4
+kaggle
