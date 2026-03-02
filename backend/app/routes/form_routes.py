@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
-from app.models.form_models import EducationModel, ProfileUpdate, LeetcodeCodeRequest, LeetcodeLinkRequest
+from app.models.form_models import EducationModel, ProfileUpdate, LeetcodeCodeRequest, LeetcodeLinkRequest, LinkedinAddRequest
 from app.models.dev_models import GithubLinkRequest, GithubCodeRequest
 from typing import Annotated, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
@@ -395,4 +395,93 @@ async def update_leetcode(
         return JSONResponse(
             status_code=500,
             content={"message": "Internal server error"}
+        )
+    
+@form_router.post("/linkedin/add")
+async def add_linkedin(
+    data: LinkedinAddRequest,
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    try:
+        email = request.state.user["email"]
+
+        await db.dev.update_one(
+            {"email": email},
+            {
+                "$set": {
+                    "email": email,
+                    "linkedin": data.linkedin_url,
+                    "updated_at": datetime.utcnow()
+                },
+                "$setOnInsert": {
+                    "created_at": datetime.utcnow()
+                }
+            },
+            upsert=True
+        )
+
+        return {"message": "LinkedIn link added successfully"}
+
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal server error"}
+        )
+    
+@form_router.get("/generate")
+async def generate_profile(
+    request: Request,
+    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
+):
+    try:
+        email = request.state.user["email"]
+
+        user = await db.users.find_one({"email": email})
+        dev = await db.dev.find_one({"email": email})
+
+        if not user:
+            raise HTTPException(404, "User not found")
+
+        def safe(val, default):
+            return val if val else default
+
+        profile = {
+            "id": str(user.get("_id", "")),
+            "name": safe(user.get("full_name"), ""),
+            "phone": safe(user.get("phone"), ""),
+            "email": safe(user.get("email"), ""),
+
+            "github": safe(dev.get("github", {}).get("username") if dev else "", ""),
+            "linkedin": safe(user.get("links", {}).get("linkedin"), ""),
+
+            "professional_summary": "",
+
+            "education": safe(user.get("education"), []),
+
+            "skills": [s.get("name") for s in user.get("skills", [])] if user.get("skills") else [],
+
+            "skills_categorized": {},
+
+            "experience": safe(user.get("experience"), []),
+
+            "projects": safe(user.get("projects"), []),
+
+            "certifications": safe(user.get("certifications"), []),
+
+            "achievements": safe(user.get("achievements"), [])
+        }
+
+        return profile
+
+    except HTTPException as e:
+        return JSONResponse(
+            status_code=e.status_code,
+            content={"message": e.detail}
+        )
+
+    except Exception:
+        return JSONResponse(
+            status_code=500,
+            content={"message": "Internal Server Error"}
         )
