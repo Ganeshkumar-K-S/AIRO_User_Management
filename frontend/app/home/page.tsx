@@ -6,7 +6,7 @@ import { getAuth, clearAuth, apiGet, apiPatch } from '@/lib/api';
 import {
   GraduationCap, Briefcase, Trophy, Zap, Laptop2, MapPin, Phone,
   LogOut, CheckCircle2, Building2, Calendar, Star, Package, Globe,
-  Github, Clock, Pencil, Trash2, Plus, PencilLine,
+  Github, Clock, Pencil, Trash2, Plus, PencilLine, Award,
 } from 'lucide-react';
 
 /* ── TYPES ── */
@@ -19,8 +19,9 @@ interface Achievement { title: string; description?: string; date?: string; }
 interface Profile {
   full_name?: string; email?: string; phone?: string; location?: string;
   education?: Education[]; projects?: Project[]; skills?: Skill[];
-  experience?: Experience[]; achievements?: Achievement[];
+  experience?: Experience[]; achievements?: Achievement[]; certifications?: Certification[];
 }
+interface Certification { title: string; issuer: string; issue_date?: string; link?: string; }
 
 /* ── DESIGN SYSTEM ── */
 const C = {
@@ -63,14 +64,14 @@ function useScrollReveal(delay = 0) {
 /* ── NAVBAR ── */
 export function Navbar({ active }: { active?: string }) {
   const router = useRouter();
-  const NAV = ['Dashboard', 'Development', 'Machine Learning', 'DSA'];
+  const NAV = ['Dashboard', 'Development', 'Resume builder', 'DSA'];
   return (
     <nav style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 60, gap: 36, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${C.border}`, position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200 }}>
       {NAV.map(label => (
         <button key={label} onClick={() => {
           if (label === 'Dashboard') router.push('/home');
           if (label === 'Development') router.push('/development');
-          if (label === 'Machine Learning') router.push('/profile/ml');
+          if (label === 'Resume builder') router.push('/resume');
           if (label === 'DSA') router.push('/dsa');
         }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: active === label ? C.accent : C.muted, fontWeight: active === label ? 700 : 500, borderBottom: active === label ? `2.5px solid ${C.accent}` : '2.5px solid transparent', paddingBottom: 4, transition: 'all 0.2s' }}>
           {label}
@@ -312,11 +313,12 @@ export default function HomePage() {
   }
 
   const del = {
-    edu:   (i: number) => patch({ education:    (profile?.education    ?? []).filter((_, idx) => idx !== i) }, 'Education removed'),
-    proj:  (i: number) => patch({ projects:     (profile?.projects     ?? []).filter((_, idx) => idx !== i) }, 'Project removed'),
-    exp:   (i: number) => patch({ experience:   (profile?.experience   ?? []).filter((_, idx) => idx !== i) }, 'Experience removed'),
-    ach:   (i: number) => patch({ achievements: (profile?.achievements ?? []).filter((_, idx) => idx !== i) }, 'Achievement removed'),
-    skill: (i: number) => patch({ skills:       (profile?.skills       ?? []).filter((_, idx) => idx !== i) }, 'Skill removed'),
+    edu:  (i: number) => patch({ education:      (profile?.education      ?? []).filter((_, idx) => idx !== i) }, 'Education removed'),
+    proj: (i: number) => patch({ projects:       (profile?.projects       ?? []).filter((_, idx) => idx !== i) }, 'Project removed'),
+    exp:  (i: number) => patch({ experience:     (profile?.experience     ?? []).filter((_, idx) => idx !== i) }, 'Experience removed'),
+    ach:  (i: number) => patch({ achievements:   (profile?.achievements   ?? []).filter((_, idx) => idx !== i) }, 'Achievement removed'),
+    cert: (i: number) => patch({ certifications: (profile?.certifications ?? []).filter((_, idx) => idx !== i) }, 'Certification removed'),
+    skill:(i: number) => patch({ skills:         (profile?.skills         ?? []).filter((_, idx) => idx !== i) }, 'Skill removed'),
   };
 
   if (!auth) return null;
@@ -515,9 +517,37 @@ export default function HomePage() {
                 </HScroll>
               ) : <Empty icon={<Trophy size={28} />} text="Add hackathon wins, certifications, and recognitions" onAdd={() => router.push('/profile/achievements')} label="Add Achievement" />}
             </div>
+            {/* CERTIFICATIONS - NEW SECTION */}
+            <div style={{ marginBottom: 66 }}>
+              <SectionHead title="Certifications" count={profile?.certifications?.length ?? 0}
+                subtitle="Professional certifications and credentials you've earned"
+                onAdd={() => router.push('/profile/certifications')} addLabel="+ Add Certification" />
+              {profile?.certifications?.length ? (
+                <HScroll>
+                  {profile.certifications.map((c, i) => (
+                    <InfoCard key={i} accentColor="#eab308"
+                      typeBadge={c.issuer}
+                      yearBadge={c.issue_date ? new Date(c.issue_date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }) : undefined}
+                      title={c.title} subtitle={c.issuer}
+                      stats={[
+                        { icon: <Building2 size={14} />, label: 'Issuer', value: c.issuer || '—' },
+                        { icon: <Calendar size={14} />,  label: 'Issued', value: c.issue_date ? new Date(c.issue_date).toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) : '—' },
+                      ]}
+                      footer={c.link ? (
+                        <a href={c.link} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, color: C.accent, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, textDecoration: 'none' }}>
+                          <Award size={13} /> View Certificate
+                        </a>
+                      ) : undefined}
+                      onEdit={() => router.push(`/profile/certifications?edit=${i}`)}
+                      onDelete={() => del.cert(i)} />
+                  ))}
+                </HScroll>
+              ) : <Empty icon={<Award size={28} />} text="Add professional certifications and credentials" onAdd={() => router.push('/profile/certifications')} label="Add Certification" />}
+            </div>
 
           </>)}
         </div>
+
       </main>
 
       {modal === 'contact' && (

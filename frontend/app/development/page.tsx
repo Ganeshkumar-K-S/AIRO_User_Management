@@ -70,7 +70,7 @@ function useScrollReveal(delay = 0) {
 /* ── NAVBAR ── */
 export function Navbar({ active }: { active?: string }) {
   const router = useRouter();
-  const NAV = ['Dashboard', 'Development', 'Machine Learning', 'DSA'];
+  const NAV = ['Dashboard', 'Development', 'Resume builder', 'DSA'];
   return (
     <nav style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 60, gap: 36, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${C.border}`, position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200 }}>
       {NAV.map(label => (

@@ -1,411 +1,501 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { getAuth, apiGet, apiPatch } from '@/lib/api';
-import { Navbar } from '@/app/home/page';
+import { getAuth, clearAuth, apiGet, apiPostAuth } from '@/lib/api';
+import {
+  Code2, TrendingUp, Zap, LogOut, MapPin, Phone,
+  CheckCircle2, Copy, Trophy, Target, Flame, Award,
+} from 'lucide-react';
 
-interface DsaStats {
-  platform: string;
+/* ── TYPES ── */
+interface Auth { token: string; email: string | null; name: string | null; }
+interface LeetCodeData {
   username: string;
-  easy_solved: number;
-  medium_solved: number;
-  hard_solved: number;
-  total_solved: number;
-  rating?: number;
-  rank?: string;
-  streak?: number;
-  contests_attended?: number;
-  badges?: string[];
+  about?: string;
+  ranking?: number;
+  reputation?: number;
+  total_solved?: number;
+  easy_solved?: number;
+  medium_solved?: number;
+  hard_solved?: number;
+  acceptance_rate?: number;
+  contribution_points?: number;
+  profile_image?: string;
+  badges?: { name: string; icon?: string }[];
+  recent_submissions?: { title: string; status: string; lang: string; timestamp: string }[];
 }
 
-const PLATFORMS = [
-  { key: 'leetcode',      label: 'LeetCode',     color: '#f89f1b', bg: '#fff8ee', icon: '⚡' },
-  { key: 'codechef',      label: 'CodeChef',      color: '#5b4638', bg: '#f5ede8', icon: '👨‍🍳' },
-  { key: 'codeforces',    label: 'Codeforces',    color: '#1a8cff', bg: '#e8f4ff', icon: '🔵' },
-  { key: 'hackerrank',    label: 'HackerRank',    color: '#2ec866', bg: '#eafaf1', icon: '🟢' },
-  { key: 'geeksforgeeks', label: 'GeeksforGeeks', color: '#2f8d46', bg: '#edf7ee', icon: '🧠' },
-];
+/* ── DESIGN SYSTEM ── */
+const C = {
+  ink:        '#0f172a',
+  paper:      '#f8fafc',
+  surface:    '#ffffff',
+  accent:     '#7c3aed',
+  accentHov:  '#6d28d9',
+  accentSoft: '#ede9fe',
+  accent2:    '#ef4444',
+  muted:      '#64748b',
+  border:     '#e2e8f0',
+  success:    '#16a34a',
+  orange:     '#f97316',
+  yellow:     '#eab308',
+};
 
-const EMPTY: DsaStats = { platform: '', username: '', easy_solved: 0, medium_solved: 0, hard_solved: 0, total_solved: 0 };
-
-function serverToForm(d: Record<string, unknown>): DsaStats {
+/* ── SCROLL REVEAL ── */
+function useScrollReveal(delay = 0) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [visible, setVisible] = useState(false);
+  useEffect(() => {
+    const el = ref.current; if (!el) return;
+    const obs = new IntersectionObserver(
+      ([e]) => setVisible(e.isIntersecting),
+      { threshold: 0.08, rootMargin: '0px 0px -40px 0px' }
+    );
+    obs.observe(el); return () => obs.disconnect();
+  }, []);
   return {
-    platform:          String(d.platform          ?? ''),
-    username:          String(d.username          ?? ''),
-    easy_solved:       Number(d.easy_solved)       || 0,
-    medium_solved:     Number(d.medium_solved)     || 0,
-    hard_solved:       Number(d.hard_solved)       || 0,
-    total_solved:      Number(d.total_solved)      || 0,
-    rating:            d.rating            !== undefined ? Number(d.rating)            : undefined,
-    rank:              d.rank              !== undefined ? String(d.rank)              : undefined,
-    streak:            d.streak            !== undefined ? Number(d.streak)            : undefined,
-    contests_attended: d.contests_attended !== undefined ? Number(d.contests_attended) : undefined,
-    badges:            Array.isArray(d.badges) ? d.badges.map(String) : [],
+    ref,
+    style: {
+      opacity: visible ? 1 : 0,
+      transform: visible ? 'translateY(0px)' : 'translateY(32px)',
+      transition: `opacity 0.55s cubic-bezier(.4,0,.2,1) ${delay}ms, transform 0.55s cubic-bezier(.4,0,.2,1) ${delay}ms`,
+    } as React.CSSProperties,
   };
 }
 
-function formToServer(e: DsaStats) {
-  return {
-    platform:          e.platform          || null,
-    username:          e.username          || null,
-    easy_solved:       e.easy_solved       || 0,
-    medium_solved:     e.medium_solved     || 0,
-    hard_solved:       e.hard_solved       || 0,
-    total_solved:      (e.easy_solved || 0) + (e.medium_solved || 0) + (e.hard_solved || 0),
-    rating:            e.rating            ?? null,
-    rank:              e.rank              ?? null,
-    streak:            e.streak            ?? null,
-    contests_attended: e.contests_attended ?? null,
-    badges:            e.badges?.length    ? e.badges : [],
-  };
+/* ── NAVBAR ── */
+export function Navbar({ active }: { active?: string }) {
+  const router = useRouter();
+  const NAV = ['Dashboard', 'Development', 'Resume Builder', 'DSA'];
+  return (
+    <nav style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 60, gap: 36, background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(16px)', borderBottom: `1px solid ${C.border}`, position: 'fixed', top: 0, left: 0, right: 0, zIndex: 200 }}>
+      {NAV.map(label => (
+        <button key={label} onClick={() => {
+          if (label === 'Dashboard') router.push('/home');
+          if (label === 'Development') router.push('/development');
+          if (label === 'Resume Builder') router.push('/profile/ml');
+          if (label === 'DSA') router.push('/dsa');
+        }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: active === label ? C.accent : C.muted, fontWeight: active === label ? 700 : 500, borderBottom: active === label ? `2.5px solid ${C.accent}` : '2.5px solid transparent', paddingBottom: 4, transition: 'all 0.2s' }}>
+          {label}
+        </button>
+      ))}
+    </nav>
+  );
 }
 
+/* ── TOAST ── */
 function Toast({ msg, type, onClose }: { msg: string; type: 'success' | 'error'; onClose: () => void }) {
   useEffect(() => { const t = setTimeout(onClose, 3000); return () => clearTimeout(t); }, [onClose]);
   return (
-    <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 999, background: type === 'success' ? '#22c55e' : '#ef4444', color: 'white', borderRadius: 10, padding: '12px 20px', fontFamily: 'Montserrat,sans-serif', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 8, boxShadow: '0 8px 24px rgba(0,0,0,.15)' }}>
-      {type === 'success' ? '✓' : '✕'} {msg}
+    <div style={{ position: 'fixed', bottom: 28, right: 28, zIndex: 9999, background: type === 'success' ? C.success : C.accent2, color: '#fff', borderRadius: 14, padding: '13px 20px', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, fontSize: 14, display: 'flex', alignItems: 'center', gap: 9, boxShadow: '0 8px 32px rgba(15,23,42,0.18)' }}>
+      {type === 'success' ? <CheckCircle2 size={16} /> : '✕'} {msg}
     </div>
   );
 }
 
+/* ── STAT CARD ── */
+function StatCard({ icon, label, value, color }: { icon: React.ReactNode; label: string; value: string | number; color: string }) {
+  const reveal = useScrollReveal(80);
+  return (
+    <div ref={reveal.ref} style={{ ...reveal.style, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 20, padding: '22px 26px', display: 'flex', alignItems: 'center', gap: 18, boxShadow: '0 4px 18px rgba(15,23,42,0.06)', flex: 1, minWidth: 160 }}>
+      <div style={{ width: 48, height: 48, borderRadius: 14, background: color + '15', display: 'flex', alignItems: 'center', justifyContent: 'center', color, flexShrink: 0 }}>{icon}</div>
+      <div>
+        <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 26, color: C.ink, margin: 0, lineHeight: 1 }}>{value}</p>
+        <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: C.muted, margin: '4px 0 0', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{label}</p>
+      </div>
+    </div>
+  );
+}
+
+/* ── DONUT CHART ── */
 function DonutChart({ easy, medium, hard, total }: { easy: number; medium: number; hard: number; total: number }) {
-  const SIZE = 140, SW = 18, r = (SIZE - SW) / 2;
+  const reveal = useScrollReveal(100);
+  const SIZE = 200, SW = 24, r = (SIZE - SW) / 2;
   const circ = 2 * Math.PI * r;
   const cx = SIZE / 2, cy = SIZE / 2;
   const safe = total || 1;
   let offset = 0;
   const segs = [
-    { val: easy,   color: '#22c55e' },
-    { val: medium, color: '#f97316' },
-    { val: hard,   color: '#ef4444' },
+    { val: easy,   color: C.success,  label: 'Easy' },
+    { val: medium, color: C.orange, label: 'Medium' },
+    { val: hard,   color: C.accent2, label: 'Hard' },
   ].map(s => {
     const dash = circ * (s.val / safe);
-    const arc = { dash, offset: -offset, color: s.color, val: s.val };
+    const arc = { dash, offset: -offset, color: s.color, val: s.val, label: s.label };
     offset += dash;
     return arc;
   });
 
   return (
-    <div style={{ position: 'relative', width: SIZE, height: SIZE, flexShrink: 0 }}>
-      <svg width={SIZE} height={SIZE} style={{ transform: 'rotate(-90deg)' }}>
-        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={SW} />
-        {segs.map((a, i) => a.val > 0 && (
-          <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={a.color} strokeWidth={SW}
-            strokeDasharray={`${a.dash} ${circ - a.dash}`} strokeDashoffset={a.offset} strokeLinecap="round" />
-        ))}
-      </svg>
-      <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-        <span style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 26, color: '#1a1a2e', lineHeight: 1 }}>{total}</span>
-        <span style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: '#9ca3af', marginTop: 2 }}>Solved</span>
-      </div>
-    </div>
-  );
-}
-
-function HBar({ value, max, color, label, count }: { value: number; max: number; color: string; label: string; count: number }) {
-  const pct = max ? Math.min((value / max) * 100, 100) : 0;
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-      <span style={{ width: 54, fontFamily: 'Montserrat,sans-serif', fontSize: 12, fontWeight: 600, color: '#6b7280' }}>{label}</span>
-      <div style={{ flex: 1, height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 99, transition: 'width .6s ease' }} />
-      </div>
-      <span style={{ width: 30, fontFamily: 'Montserrat,sans-serif', fontSize: 12, fontWeight: 700, color: '#1a1a2e', textAlign: 'right' }}>{count}</span>
-    </div>
-  );
-}
-
-function StatPill({ icon, label, value }: { icon: string; label: string; value: string | number | undefined }) {
-  if (value === undefined || value === null || value === '') return null;
-  return (
-    <div style={{ background: '#f8fafc', border: '1.5px solid #e5e7eb', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8, flex: '1 1 100px' }}>
-      <span style={{ fontSize: 16 }}>{icon}</span>
-      <div>
-        <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 10, color: '#9ca3af', margin: 0, fontWeight: 600, textTransform: 'uppercase' }}>{label}</p>
-        <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 14, fontWeight: 700, color: '#1a1a2e', margin: 0 }}>{value}</p>
-      </div>
-    </div>
-  );
-}
-
-function PlatformCard({ stats, platformInfo, onEdit, onDelete, loading }: {
-  stats: DsaStats; platformInfo: typeof PLATFORMS[0]; onEdit: () => void; onDelete: () => void; loading: boolean;
-}) {
-  const total = stats.total_solved || (stats.easy_solved + stats.medium_solved + stats.hard_solved);
-  return (
-    <div style={{ background: 'white', borderRadius: 16, border: '1.5px solid #e5e7eb', padding: '22px 24px', marginBottom: 16, boxShadow: '0 2px 8px rgba(0,0,0,.04)' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: platformInfo.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, border: `1.5px solid ${platformInfo.color}33` }}>
-            {platformInfo.icon}
-          </div>
-          <div>
-            <h3 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 16, color: '#1a1a2e', margin: 0 }}>{platformInfo.label}</h3>
-            <p style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 12, color: platformInfo.color, fontWeight: 700, margin: 0 }}>@{stats.username}</p>
+    <div ref={reveal.ref} style={{ ...reveal.style, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24, padding: '32px', boxShadow: '0 4px 18px rgba(15,23,42,0.06)' }}>
+      <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 18, color: C.ink, margin: '0 0 24px' }}>Problem Distribution</h3>
+      <div style={{ display: 'flex', gap: 32, alignItems: 'center' }}>
+        <div style={{ position: 'relative', width: SIZE, height: SIZE, flexShrink: 0 }}>
+          <svg width={SIZE} height={SIZE} style={{ transform: 'rotate(-90deg)' }}>
+            <circle cx={cx} cy={cy} r={r} fill="none" stroke="#f1f5f9" strokeWidth={SW} />
+            {segs.map((a, i) => a.val > 0 && (
+              <circle key={i} cx={cx} cy={cy} r={r} fill="none" stroke={a.color} strokeWidth={SW}
+                strokeDasharray={`${a.dash} ${circ - a.dash}`} strokeDashoffset={a.offset} strokeLinecap="round" />
+            ))}
+          </svg>
+          <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 36, color: C.ink, lineHeight: 1 }}>{total}</span>
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: C.muted, marginTop: 4, fontWeight: 600 }}>Total Solved</span>
           </div>
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={onEdit} style={{ background: 'none', border: '1.5px solid #e5e7eb', borderRadius: 8, padding: '6px 14px', fontSize: 12, color: '#6b7280', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 600 }}>✏️ Edit</button>
-          <button onClick={onDelete} disabled={loading} style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '6px 14px', fontSize: 12, color: '#ef4444', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 600 }}>🗑</button>
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: 24, alignItems: 'center', flexWrap: 'wrap' }}>
-        <DonutChart easy={stats.easy_solved} medium={stats.medium_solved} hard={stats.hard_solved} total={total} />
-        <div style={{ flex: 1, minWidth: 180 }}>
-          <HBar value={stats.easy_solved}   max={total} color="#22c55e" label="Easy"   count={stats.easy_solved} />
-          <HBar value={stats.medium_solved} max={total} color="#f97316" label="Medium" count={stats.medium_solved} />
-          <HBar value={stats.hard_solved}   max={total} color="#ef4444" label="Hard"   count={stats.hard_solved} />
-          <div style={{ display: 'flex', gap: 8, marginTop: 12, flexWrap: 'wrap' }}>
-            <StatPill icon="⭐" label="Rating"   value={stats.rating} />
-            <StatPill icon="🎖️" label="Rank"     value={stats.rank} />
-            <StatPill icon="🔥" label="Streak"   value={stats.streak ? `${stats.streak}d` : undefined} />
-            <StatPill icon="🏟️" label="Contests" value={stats.contests_attended} />
-          </div>
-        </div>
-      </div>
-      {stats.badges && stats.badges.length > 0 && (
-        <div style={{ marginTop: 16, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-          {stats.badges.map((b, i) => (
-            <span key={i} style={{ background: '#fef9ec', border: '1px solid #fde68a', color: '#92400e', borderRadius: 20, padding: '3px 10px', fontSize: 11.5, fontFamily: 'Montserrat,sans-serif', fontWeight: 600 }}>🏅 {b}</span>
+        <div style={{ flex: 1 }}>
+          {segs.map(s => (
+            <div key={s.label} style={{ marginBottom: 16 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, fontWeight: 700, color: C.ink }}>{s.label}</span>
+                <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, fontWeight: 800, color: s.color }}>{s.val}</span>
+              </div>
+              <div style={{ height: 8, background: '#f1f5f9', borderRadius: 99, overflow: 'hidden' }}>
+                <div style={{ width: `${safe ? (s.val / safe) * 100 : 0}%`, height: '100%', background: s.color, borderRadius: 99, transition: 'width 0.6s ease' }} />
+              </div>
+            </div>
           ))}
         </div>
-      )}
+      </div>
     </div>
   );
 }
 
-const inp: React.CSSProperties = { width: '100%', padding: '10px 14px', borderRadius: 8, border: '1.5px solid #e5e7eb', fontFamily: 'Montserrat,sans-serif', fontSize: 14, outline: 'none', background: 'white', color: '#1a1a2e', boxSizing: 'border-box' };
-const lbl: React.CSSProperties = { fontSize: 11, fontWeight: 700, color: '#6b7280', display: 'block', marginBottom: 5, fontFamily: 'Montserrat,sans-serif', textTransform: 'uppercase', letterSpacing: '0.5px' };
+/* ── ACCEPTANCE RATE GAUGE ── */
+function AcceptanceGauge({ rate }: { rate: number }) {
+  const reveal = useScrollReveal(120);
+  const SIZE = 180;
+  const SW = 20;
+  const r = (SIZE - SW) / 2;
+  const circ = Math.PI * r;
+  const progress = circ * (rate / 100);
 
-export default function DsaPage() {
-  const router = useRouter();
-  const [allStats, setAllStats] = useState<DsaStats[]>([]);
-  const [form,     setForm]     = useState<DsaStats>({ ...EMPTY });
-  const [editIdx,  setEditIdx]  = useState<number | null>(null);
-  const [showForm, setShowForm] = useState(false);
-  const [errors,   setErrors]   = useState<Partial<Record<keyof DsaStats, string>>>({});
-  const [loading,  setLoading]  = useState(false);
-  const [fetching, setFetching] = useState(true);
-  const [toast,    setToast]    = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
-
-  useEffect(() => {
-    const auth = getAuth();
-    if (!auth) { router.replace('/login'); return; }
-    apiGet(`/form/get-profile/${encodeURIComponent(auth.email ?? '')}`)
-      .then(d => {
-        const profiles = d.dsa_profiles ?? (d.dsa_stats ? [d.dsa_stats] : []);
-        if (profiles.length) setAllStats(profiles.map(serverToForm));
-      })
-      .catch(() => {})
-      .finally(() => setFetching(false));
-  }, [router]);
-
-  function change(field: keyof DsaStats, val: unknown) {
-    setForm(prev => ({ ...prev, [field]: val }));
-    setErrors(prev => ({ ...prev, [field]: undefined }));
-  }
-
-  function validate() {
-    const e: Partial<Record<keyof DsaStats, string>> = {};
-    if (!form.platform)        e.platform = 'Select a platform';
-    if (!form.username.trim()) e.username  = 'Required';
-    setErrors(e);
-    return !Object.keys(e).length;
-  }
-
-  function startAdd()        { setForm({ ...EMPTY }); setEditIdx(null); setErrors({}); setShowForm(true); }
-  function startEdit(i: number) { setForm({ ...allStats[i] }); setEditIdx(i); setErrors({}); setShowForm(true); }
-
-  async function handleDelete(idx: number) {
-    setLoading(true);
-    try {
-      const updated = allStats.filter((_, i) => i !== idx).map(formToServer);
-      await apiPatch('/form/update-profile', { dsa_profiles: updated });
-      setAllStats(prev => prev.filter((_, i) => i !== idx));
-      setToast({ msg: 'Profile deleted!', type: 'success' });
-    } catch { setToast({ msg: 'Failed to delete', type: 'error' }); }
-    finally { setLoading(false); }
-  }
-
-  async function handleSave(ev: React.FormEvent) {
-    ev.preventDefault();
-    if (!validate()) return;
-    setLoading(true);
-    try {
-      const merged = editIdx !== null
-        ? allStats.map((s, i) => i === editIdx ? form : s)
-        : [...allStats, form];
-      await apiPatch('/form/update-profile', { dsa_profiles: merged.map(formToServer) });
-      setAllStats(merged);
-      setToast({ msg: editIdx !== null ? 'Profile updated!' : 'Profile added!', type: 'success' });
-      setShowForm(false);
-    } catch (err: unknown) {
-      setToast({ msg: err instanceof Error ? err.message : 'Failed to save', type: 'error' });
-    } finally { setLoading(false); }
-  }
-
-  const totalSolved = allStats.reduce((s, p) => s + (p.total_solved || p.easy_solved + p.medium_solved + p.hard_solved), 0);
-
-  if (fetching) return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <Navbar active="DSA" />
-      <div style={{ textAlign: 'center', paddingTop: 100 }}>
-        <div style={{ width: 36, height: 36, border: '4px solid #e5e7eb', borderTopColor: '#1a1a2e', borderRadius: '50%', animation: 'spin .8s linear infinite', margin: '0 auto 16px' }} />
-        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
-        <p style={{ fontFamily: 'Montserrat,sans-serif', color: '#9ca3af', fontSize: 14 }}>Loading your DSA profiles…</p>
+  return (
+    <div ref={reveal.ref} style={{ ...reveal.style, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24, padding: '32px', boxShadow: '0 4px 18px rgba(15,23,42,0.06)', textAlign: 'center' }}>
+      <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 18, color: C.ink, margin: '0 0 24px' }}>Acceptance Rate</h3>
+      <div style={{ position: 'relative', width: SIZE, height: SIZE / 2 + 20, margin: '0 auto' }}>
+        <svg width={SIZE} height={SIZE / 2 + 20} style={{ overflow: 'visible' }}>
+          <path d={`M ${SW / 2} ${SIZE / 2} A ${r} ${r} 0 0 1 ${SIZE - SW / 2} ${SIZE / 2}`}
+            fill="none" stroke="#f1f5f9" strokeWidth={SW} strokeLinecap="round" />
+          <path d={`M ${SW / 2} ${SIZE / 2} A ${r} ${r} 0 0 1 ${SIZE - SW / 2} ${SIZE / 2}`}
+            fill="none" stroke={rate >= 70 ? C.success : rate >= 50 ? C.orange : C.accent2}
+            strokeWidth={SW} strokeLinecap="round"
+            strokeDasharray={`${progress} ${circ}`} />
+        </svg>
+        <div style={{ position: 'absolute', bottom: 10, left: 0, right: 0, textAlign: 'center' }}>
+          <span style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 32, color: C.ink }}>{rate}%</span>
+        </div>
       </div>
     </div>
   );
+}
 
+/* ── LEETCODE BANNER ── */
+function LeetCodeBanner({ leetcode }: { leetcode: LeetCodeData }) {
+  const reveal = useScrollReveal(0);
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <Navbar active="DSA" />
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg) } }
-        @keyframes fadeUp { from { opacity:0;transform:translateY(16px) } to { opacity:1;transform:none } }
-        .fade-up { animation: fadeUp .35s ease forwards; }
-      `}</style>
-
-      <div style={{ maxWidth: 860, margin: '0 auto', padding: '32px 24px 80px' }}>
-        {/* Header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28, flexWrap: 'wrap', gap: 12 }}>
-          <div>
-            <h1 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 28, color: '#1a1a2e', margin: 0 }}>⚔️ DSA Tracker</h1>
-            <p style={{ color: '#9ca3af', fontSize: 13.5, fontFamily: 'Montserrat,sans-serif', marginTop: 4 }}>Track your competitive programming journey across platforms</p>
-          </div>
-          {!showForm && (
-            <button onClick={startAdd} style={{ background: '#1a1a2e', color: 'white', border: 'none', borderRadius: 10, padding: '11px 22px', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: 13.5, cursor: 'pointer' }}>
-              + Add Platform
-            </button>
+    <div ref={reveal.ref} style={{ ...reveal.style, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 28, padding: '36px 40px', marginBottom: 40, boxShadow: '0 4px 24px rgba(15,23,42,0.08)', display: 'flex', alignItems: 'center', gap: 36, flexWrap: 'wrap' }}>
+      {leetcode.profile_image && <img src={leetcode.profile_image} alt="LeetCode avatar" style={{ width: 100, height: 100, borderRadius: '50%', border: `3px solid ${C.accentSoft}`, boxShadow: `0 8px 24px ${C.accent}30`, flexShrink: 0 }} />}
+      <div style={{ flex: 1 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 8, flexWrap: 'wrap' }}>
+          <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 28, color: C.ink, margin: 0 }}>{leetcode.username}</h2>
+          <a href={`https://leetcode.com/${leetcode.username}`} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'flex', alignItems: 'center', gap: 5, background: C.accentSoft, color: C.accent, borderRadius: 10, padding: '6px 14px', fontFamily: 'Montserrat, sans-serif', fontSize: 12, fontWeight: 700, textDecoration: 'none' }}>
+            <Code2 size={13} /> Open LeetCode
+          </a>
+        </div>
+        {leetcode.about && <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: C.muted, margin: '0 0 16px', lineHeight: 1.6 }}>{leetcode.about}</p>}
+        <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
+          {leetcode.ranking && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: C.muted, fontWeight: 600 }}>
+              <Trophy size={14} /> Ranking: {leetcode.ranking.toLocaleString()}
+            </span>
+          )}
+          {leetcode.reputation !== undefined && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: C.muted, fontWeight: 600 }}>
+              <Award size={14} /> Reputation: {leetcode.reputation}
+            </span>
+          )}
+          {leetcode.contribution_points !== undefined && (
+            <span style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: C.muted, fontWeight: 600 }}>
+              <Zap size={14} /> Contributions: {leetcode.contribution_points}
+            </span>
           )}
         </div>
+      </div>
+    </div>
+  );
+}
 
-        {/* Summary cards */}
-        {allStats.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(130px,1fr))', gap: 12, marginBottom: 28 }} className="fade-up">
-            {[
-              { label: 'Total Solved', value: totalSolved,                                        color: '#1a1a2e', icon: '🎯' },
-              { label: 'Easy',         value: allStats.reduce((s,p) => s+p.easy_solved,   0),     color: '#22c55e', icon: '🟢' },
-              { label: 'Medium',       value: allStats.reduce((s,p) => s+p.medium_solved, 0),     color: '#f97316', icon: '🟠' },
-              { label: 'Hard',         value: allStats.reduce((s,p) => s+p.hard_solved,   0),     color: '#ef4444', icon: '🔴' },
-              { label: 'Platforms',    value: allStats.length,                                     color: '#6c47ff', icon: '🏆' },
-            ].map(s => (
-              <div key={s.label} style={{ background: 'white', borderRadius: 14, border: '1.5px solid #e5e7eb', padding: '16px 18px', boxShadow: '0 1px 4px rgba(0,0,0,.05)' }}>
-                <div style={{ fontSize: 20, marginBottom: 6 }}>{s.icon}</div>
-                <div style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 26, color: s.color }}>{s.value}</div>
-                <div style={{ fontFamily: 'Montserrat,sans-serif', fontSize: 11, color: '#9ca3af', marginTop: 2, fontWeight: 600 }}>{s.label}</div>
-              </div>
-            ))}
+/* ── BADGES SECTION ── */
+function BadgesSection({ badges }: { badges: { name: string; icon?: string }[] }) {
+  const reveal = useScrollReveal(140);
+  if (!badges || badges.length === 0) return null;
+  
+  return (
+    <div ref={reveal.ref} style={{ ...reveal.style, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24, padding: '28px 32px', boxShadow: '0 4px 18px rgba(15,23,42,0.06)', marginBottom: 40 }}>
+      <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 18, color: C.ink, margin: '0 0 20px' }}>Badges & Achievements</h3>
+      <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+        {badges.map((badge, i) => (
+          <div key={i} style={{ background: `linear-gradient(135deg, ${C.yellow}20, ${C.orange}20)`, border: `1.5px solid ${C.yellow}`, borderRadius: 12, padding: '10px 18px', display: 'flex', alignItems: 'center', gap: 8 }}>
+            <span style={{ fontSize: 20 }}>{badge.icon || '🏅'}</span>
+            <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700, color: C.ink }}>{badge.name}</span>
           </div>
-        )}
+        ))}
+      </div>
+    </div>
+  );
+}
 
-        {/* Empty state */}
-        {allStats.length === 0 && !showForm && (
-          <div style={{ textAlign: 'center', paddingTop: 60, paddingBottom: 40 }}>
-            <div style={{ fontSize: 64, marginBottom: 16 }}>⚔️</div>
-            <h2 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 20, color: '#1a1a2e', marginBottom: 8 }}>No platforms added yet</h2>
-            <p style={{ fontFamily: 'Montserrat,sans-serif', color: '#9ca3af', fontSize: 14, marginBottom: 24 }}>Track your LeetCode, CodeChef and other profiles here</p>
-            <button onClick={startAdd} style={{ background: '#1a1a2e', color: 'white', border: 'none', borderRadius: 10, padding: '12px 28px', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: 14, cursor: 'pointer' }}>
-              + Add Your First Platform
-            </button>
-          </div>
-        )}
+/* ── LINK LEETCODE PANEL ── */
+function LinkLeetCodePanel({ onLinked }: { onLinked: () => void }) {
+  const [step, setStep] = useState<'enter' | 'verify'>('enter');
+  const [leetcodeId, setLeetcodeId] = useState('');
+  const [code, setCode] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
 
-        {/* Platform cards */}
-        {allStats.map((s, i) => {
-          const pInfo = PLATFORMS.find(p => p.key === s.platform) ?? { key: s.platform, label: s.platform, color: '#6c47ff', bg: '#f3f0ff', icon: '🔷' };
-          return <div key={i} className="fade-up"><PlatformCard stats={s} platformInfo={pInfo} onEdit={() => startEdit(i)} onDelete={() => handleDelete(i)} loading={loading} /></div>;
-        })}
+  async function getCode() {
+    if (!leetcodeId.trim()) return;
+    setLoading(true);
+    try {
+      const res = await apiPostAuth('/form/leetcode/getcode', { leetcode_id: leetcodeId });
+      setCode(res.verification_code);
+      setStep('verify');
+    } catch {
+      setToast({ msg: 'Failed to get code', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }
 
-        {/* Add/Edit Form */}
-        {showForm && (
-          <div className="fade-up" style={{ background: 'white', borderRadius: 20, border: '1.5px solid #e5e7eb', padding: '28px 32px', boxShadow: '0 4px 20px rgba(0,0,0,.07)', marginTop: 8 }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
-              <h2 style={{ fontFamily: 'Montserrat,sans-serif', fontWeight: 800, fontSize: 18, color: '#1a1a2e', margin: 0 }}>
-                {editIdx !== null ? '✏️ Edit Platform' : '➕ Add Platform'}
-              </h2>
-              <button type="button" onClick={() => setShowForm(false)} style={{ background: '#f1f5f9', border: 'none', borderRadius: 8, padding: '6px 14px', color: '#6b7280', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 600, fontSize: 13 }}>✕ Cancel</button>
+  async function link() {
+    setLoading(true);
+    try {
+      await apiPostAuth('/form/leetcode/link', { leetcode_id: leetcodeId, code });
+      setToast({ msg: 'LeetCode linked!', type: 'success' });
+      setTimeout(onLinked, 1000);
+    } catch (e: any) {
+      setToast({ msg: e?.message || 'Linking failed', type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  const inpStyle: React.CSSProperties = {
+    width: '100%', padding: '12px 16px', borderRadius: 12,
+    border: `1px solid ${C.border}`, fontFamily: 'Montserrat, sans-serif',
+    fontSize: 14, outline: 'none', background: C.surface, color: C.ink, boxSizing: 'border-box',
+  };
+
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 500, padding: 40 }}>
+      <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 28, padding: '48px 52px', maxWidth: 500, width: '100%', boxShadow: '0 8px 40px rgba(15,23,42,0.1)', textAlign: 'center' }}>
+        <div style={{ width: 72, height: 72, borderRadius: 20, background: C.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px' }}>
+          <Code2 size={36} color={C.accent} />
+        </div>
+        <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 26, color: C.ink, margin: '0 0 8px' }}>Link LeetCode</h2>
+        <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: C.muted, margin: '0 0 36px', lineHeight: 1.6 }}>
+          Connect your LeetCode account to showcase your problem-solving stats and achievements.
+        </p>
+        {step === 'enter' ? (
+          <>
+            <div style={{ textAlign: 'left', marginBottom: 20 }}>
+              <label style={{ fontSize: 11, fontWeight: 700, color: C.muted, textTransform: 'uppercase', letterSpacing: '0.6px', display: 'block', marginBottom: 6 }}>
+                LeetCode Username
+              </label>
+              <input style={inpStyle} placeholder="e.g. your_username" value={leetcodeId}
+                onChange={e => setLeetcodeId(e.target.value)}
+                onKeyDown={e => e.key === 'Enter' && getCode()} />
             </div>
-
-            <form onSubmit={handleSave}>
-              {/* Platform selector */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={lbl}>Platform *</label>
-                <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-                  {PLATFORMS.map(p => (
-                    <button key={p.key} type="button" onClick={() => change('platform', p.key)}
-                      style={{ padding: '8px 16px', borderRadius: 10, border: `2px solid ${form.platform === p.key ? p.color : '#e5e7eb'}`, background: form.platform === p.key ? p.bg : 'white', cursor: 'pointer', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: 13, color: form.platform === p.key ? p.color : '#6b7280', display: 'flex', alignItems: 'center', gap: 6, transition: 'all .15s' }}>
-                      {p.icon} {p.label}
-                    </button>
-                  ))}
-                </div>
-                {errors.platform && <span style={{ fontSize: 12, color: '#ef4444', fontFamily: 'Montserrat,sans-serif', marginTop: 4, display: 'block' }}>{errors.platform}</span>}
-              </div>
-
-              {/* Username */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={lbl}>Username *</label>
-                <input style={{ ...inp, border: `1.5px solid ${errors.username ? '#ef4444' : '#e5e7eb'}` }}
-                  placeholder="Your profile username" value={form.username} onChange={e => change('username', e.target.value)} />
-                {errors.username && <span style={{ fontSize: 12, color: '#ef4444', fontFamily: 'Montserrat,sans-serif', marginTop: 3, display: 'block' }}>{errors.username}</span>}
-              </div>
-
-              {/* Problems Solved */}
-              <div style={{ marginBottom: 20 }}>
-                <label style={lbl}>Problems Solved</label>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 12 }}>
-                  {([
-                    { field: 'easy_solved'   as const, label: 'Easy 🟢',   bg: '#dcfce7', border: '#bbf7d0' },
-                    { field: 'medium_solved' as const, label: 'Medium 🟠', bg: '#ffedd5', border: '#fed7aa' },
-                    { field: 'hard_solved'   as const, label: 'Hard 🔴',   bg: '#fee2e2', border: '#fecaca' },
-                  ]).map(({ field, label, bg, border }) => (
-                    <div key={field}>
-                      <label style={{ ...lbl, marginBottom: 4 }}>{label}</label>
-                      <input type="number" min={0} style={{ ...inp, background: bg, border: `1.5px solid ${border}` }}
-                        value={form[field] || ''} onChange={e => change(field, parseInt(e.target.value) || 0)} placeholder="0" />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Rating / Rank / Streak / Contests */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
-                {([
-                  { field: 'rating'            as const, label: 'Rating',           type: 'number', ph: 'e.g. 1800' },
-                  { field: 'rank'              as const, label: 'Rank / Badge',      type: 'text',   ph: 'e.g. Knight, 3★' },
-                  { field: 'streak'            as const, label: 'Streak (days)',     type: 'number', ph: 'e.g. 30' },
-                  { field: 'contests_attended' as const, label: 'Contests Attended', type: 'number', ph: 'e.g. 12' },
-                ]).map(({ field, label, type, ph }) => (
-                  <div key={field}>
-                    <label style={lbl}>{label}</label>
-                    <input type={type} min={type === 'number' ? 0 : undefined} style={inp} placeholder={ph}
-                      value={form[field] ?? ''} onChange={e => change(field, type === 'number' ? (parseInt(e.target.value) || 0) : e.target.value)} />
-                  </div>
-                ))}
-              </div>
-
-              {/* Badges */}
-              <div style={{ marginBottom: 24 }}>
-                <label style={{ ...lbl }}>Badges <span style={{ color: '#9ca3af', fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(comma separated)</span></label>
-                <input style={inp} placeholder="e.g. 100 Days Badge, Top 5%"
-                  value={(form.badges ?? []).join(', ')}
-                  onChange={e => change('badges', e.target.value.split(',').map(b => b.trim()).filter(Boolean))} />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12 }}>
-                <button type="button" onClick={() => setShowForm(false)} style={{ padding: '11px 24px', border: '1.5px solid #e5e7eb', borderRadius: 10, background: 'none', cursor: 'pointer', color: '#6b7280', fontFamily: 'Montserrat,sans-serif', fontSize: 14, fontWeight: 600 }}>Cancel</button>
-                <button type="submit" disabled={loading} style={{ padding: '11px 32px', background: '#1a1a2e', border: 'none', borderRadius: 10, color: 'white', fontFamily: 'Montserrat,sans-serif', fontWeight: 700, fontSize: 14, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1 }}>
-                  {loading ? 'Saving…' : editIdx !== null ? '✓ Update Profile' : '✓ Save Profile'}
+            <button onClick={getCode} disabled={loading || !leetcodeId.trim()}
+              style={{ width: '100%', padding: '13px', background: C.accent, border: 'none', borderRadius: 14, color: '#fff', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 15, cursor: 'pointer', opacity: loading || !leetcodeId.trim() ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              {loading ? 'Getting code…' : <><Target size={16} /> Get Verification Code</>}
+            </button>
+          </>
+        ) : (
+          <>
+            <div style={{ background: C.accentSoft, borderRadius: 16, padding: '20px 24px', marginBottom: 24 }}>
+              <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: C.accent, fontWeight: 700, margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Your Verification Code
+              </p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                <span style={{ fontFamily: 'monospace', fontSize: 28, fontWeight: 900, color: C.accent, letterSpacing: 4 }}>{code}</span>
+                <button onClick={() => navigator.clipboard.writeText(code)}
+                  style={{ background: 'none', border: 'none', cursor: 'pointer', color: C.accent }}>
+                  <Copy size={20} />
                 </button>
               </div>
-            </form>
-          </div>
+            </div>
+            <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: C.muted, marginBottom: 28, lineHeight: 1.6 }}>
+              Add this code to your LeetCode bio at <strong>leetcode.com/profile</strong>, then click Verify below.
+            </p>
+            <button onClick={link} disabled={loading}
+              style={{ width: '100%', padding: '13px', background: C.accent, border: 'none', borderRadius: 14, color: '#fff', fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 15, cursor: 'pointer', opacity: loading ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 12 }}>
+              {loading ? 'Verifying…' : <><CheckCircle2 size={16} /> Verify and Link</>}
+            </button>
+            <button onClick={() => setStep('enter')}
+              style={{ background: 'none', border: 'none', color: C.muted, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 600 }}>
+              Back
+            </button>
+          </>
         )}
       </div>
+      {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+    </div>
+  );
+}
+
+/* ── MAIN PAGE ── */
+export default function DsaPage() {
+  const router = useRouter();
+  const [auth, setAuth] = useState<Auth | null>(null);
+  const [leetcode, setLeetcode] = useState<LeetCodeData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [updating, setUpdating] = useState(false);
+  const [toast, setToast] = useState<{ msg: string; type: 'success' | 'error' } | null>(null);
+  const [profile, setProfile] = useState<{ full_name?: string; phone?: string; location?: string } | null>(null);
+
+  const fetchData = useCallback(async (email: string) => {
+    try {
+      const data = await apiGet(`/form/get-profile/${encodeURIComponent(email)}`);
+      setProfile({ full_name: data.full_name, phone: data.phone, location: data.location });
+      if (data.leetcode) setLeetcode(data.leetcode);
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    const a = getAuth();
+    if (!a) { router.push('/login'); return; }
+    setAuth(a);
+    if (a.email) fetchData(a.email).finally(() => setLoading(false));
+  }, [router, fetchData]);
+
+  async function updateLeetCode() {
+    setUpdating(true);
+    try {
+      await apiPostAuth('/form/leetcode/update', {});
+      if (auth?.email) await fetchData(auth.email);
+      setToast({ msg: 'LeetCode data refreshed!', type: 'success' });
+    } catch {
+      setToast({ msg: 'Update failed', type: 'error' });
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  function logout() {
+    clearAuth();
+    router.push('/login');
+  }
+
+  const displayName = profile?.full_name || auth?.name || auth?.email?.split('@')[0] || 'User';
+  const initials = displayName.split(' ').map((w: string) => w[0]).join('').toUpperCase().slice(0, 2);
+  const SIDEBAR_W = 285;
+  const NAV_H = 60;
+
+  const totalSolved = (leetcode?.easy_solved || 0) + (leetcode?.medium_solved || 0) + (leetcode?.hard_solved || 0);
+
+  return (
+    <div style={{ minHeight: '100vh', background: 'linear-gradient(160deg,#f8fafc 0%,#eef2ff 60%,#f5f3ff 100%)', fontFamily: 'Montserrat, sans-serif' }}>
+      <Navbar active="DSA" />
+
+      {/* SIDEBAR */}
+      <aside style={{ position: 'fixed', top: NAV_H, left: 0, width: SIDEBAR_W, height: `calc(100vh - ${NAV_H}px)`, overflowY: 'auto', borderRight: `1px solid ${C.border}`, background: 'rgba(255,255,255,0.75)', backdropFilter: 'blur(20px)', padding: '40px 28px 40px 34px', display: 'flex', flexDirection: 'column', zIndex: 100 }}>
+        <div style={{ width: 72, height: 72, borderRadius: '50%', background: `linear-gradient(135deg, ${C.accent}, #9f67ff)`, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontWeight: 800, fontSize: 24, marginBottom: 16, flexShrink: 0, boxShadow: `0 12px 30px ${C.accent}45`, overflow: 'hidden' }}>
+          {leetcode?.profile_image ? <img src={leetcode.profile_image} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initials}
+        </div>
+        <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 18, color: C.ink, margin: '0 0 4px' }}>{displayName}</p>
+        <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: C.muted, margin: '0 0 8px', wordBreak: 'break-all', lineHeight: 1.5 }}>{auth?.email}</p>
+        {leetcode && (
+          <a href={`https://leetcode.com/${leetcode.username}`} target="_blank" rel="noopener noreferrer"
+            style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: 'Montserrat, sans-serif', fontSize: 12, color: C.accent, fontWeight: 700, textDecoration: 'none', marginBottom: 24 }}>
+            <Code2 size={14} /> @{leetcode.username}
+          </a>
+        )}
+        {profile?.location && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 8, color: C.muted, fontSize: 13.5 }}>
+            <MapPin size={15} color={C.muted} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{profile.location}</span>
+          </div>
+        )}
+        {profile?.phone && (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 9, marginBottom: 24, color: C.muted, fontSize: 13.5 }}>
+            <Phone size={15} color={C.muted} />
+            <span style={{ fontFamily: 'Montserrat, sans-serif' }}>{profile.phone}</span>
+          </div>
+        )}
+        {leetcode && (
+          <button onClick={updateLeetCode} disabled={updating}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.accent; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; }}
+            style={{ display: 'flex', alignItems: 'center', gap: 8, width: '100%', background: 'none', border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 13px', fontSize: 13, color: C.muted, cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontWeight: 600, transition: 'all 0.2s', marginBottom: 8, opacity: updating ? 0.6 : 1 }}>
+            <TrendingUp size={14} style={{ animation: updating ? 'spin 1s linear infinite' : 'none' }} />
+            {updating ? 'Refreshing…' : 'Refresh LeetCode'}
+          </button>
+        )}
+        <div style={{ flex: 1 }} />
+        <button onClick={logout}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = C.accent2; e.currentTarget.style.color = C.accent2; e.currentTarget.style.background = '#fff0f0'; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; e.currentTarget.style.background = 'none'; }}
+          style={{ width: '100%', background: 'none', border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 14px', fontFamily: 'Montserrat, sans-serif', fontSize: 13.5, fontWeight: 600, cursor: 'pointer', color: C.muted, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: 8 }}>
+          <LogOut size={14} /> Logout
+        </button>
+      </aside>
+
+      {/* MAIN */}
+      <main style={{ marginLeft: SIDEBAR_W, paddingTop: NAV_H, minHeight: '100vh' }}>
+        <div style={{ padding: '56px 64px 110px' }}>
+          <h1 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 48, color: C.ink, margin: '0 0 10px', letterSpacing: '-2px', lineHeight: 1 }}>
+            My <span style={{ color: C.accent }}>DSA Journey</span>
+          </h1>
+          <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 15, color: C.muted, margin: '0 0 56px', fontWeight: 500 }}>
+            Track your problem-solving progress, stats, and achievements
+          </p>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: 100 }}>
+              <span className="spinner" style={{ borderColor: `${C.accent}25`, borderTopColor: C.accent, width: 40, height: 40 }} />
+            </div>
+          ) : !leetcode ? (
+            <LinkLeetCodePanel onLinked={() => { if (auth?.email) fetchData(auth.email); }} />
+          ) : (
+            <>
+              <LeetCodeBanner leetcode={leetcode} />
+
+              <div style={{ display: 'flex', gap: 20, marginBottom: 56, flexWrap: 'wrap' }}>
+                <StatCard icon={<Target size={22} />} label="Total Solved" value={totalSolved} color={C.accent} />
+                <StatCard icon={<CheckCircle2 size={22} />} label="Easy" value={leetcode.easy_solved || 0} color={C.success} />
+                <StatCard icon={<Zap size={22} />} label="Medium" value={leetcode.medium_solved || 0} color={C.orange} />
+                <StatCard icon={<Flame size={22} />} label="Hard" value={leetcode.hard_solved || 0} color={C.accent2} />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 32, marginBottom: 56 }}>
+                <DonutChart
+                  easy={leetcode.easy_solved || 0}
+                  medium={leetcode.medium_solved || 0}
+                  hard={leetcode.hard_solved || 0}
+                  total={totalSolved}
+                />
+                {leetcode.acceptance_rate !== undefined && (
+                  <AcceptanceGauge rate={leetcode.acceptance_rate} />
+                )}
+              </div>
+
+              {leetcode.badges && leetcode.badges.length > 0 && (
+                <BadgesSection badges={leetcode.badges} />
+              )}
+            </>
+          )}
+        </div>
+      </main>
 
       {toast && <Toast msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner { display: inline-block; border: 3px solid; border-radius: 50%; animation: spin 0.8s linear infinite; }
+      `}</style>
     </div>
   );
 }
