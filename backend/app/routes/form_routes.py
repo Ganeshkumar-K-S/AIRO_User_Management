@@ -180,6 +180,9 @@ async def link_github(
 
         github_data = await fetch_github(data.github_id)
 
+        github_data = await fetch_github(data.github_id)
+        print("GITHUB RESPONSE:", github_data)
+
         if not github_data or "error" in github_data:
             raise HTTPException(404, "GitHub user not found")
 
