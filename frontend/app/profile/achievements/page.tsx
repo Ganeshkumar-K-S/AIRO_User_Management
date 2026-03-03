@@ -1,3 +1,12 @@
 'use client';
+
+import nextDynamic from 'next/dynamic';
+
 export const dynamic = 'force-dynamic';
-export { AchievementsPage as default } from '../other-pages';
+
+const AchievementsPage = nextDynamic(
+  () => import('../other-pages').then(mod => mod.AchievementsPage),
+  { ssr: false }
+);
+
+export default AchievementsPage;
