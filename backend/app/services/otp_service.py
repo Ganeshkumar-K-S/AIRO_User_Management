@@ -60,15 +60,26 @@ from sendgrid.helpers.mail import Mail
 
 async def send_otp_email(email: str, otp: str):
 
+    api_key = os.getenv("SENDGRID_API_KEY")
+    mail_from = os.getenv("MAIL_FROM")
+
+    print("SENDGRID KEY:", api_key)
+    print("MAIL_FROM:", mail_from)
+
     message = Mail(
-        from_email=os.getenv("MAIL_FROM"),
+        from_email=mail_from,
         to_emails=email,
         subject="Your OTP Code",
         plain_text_content=f"Your OTP is {otp}. It expires in 5 minutes."
     )
 
     try:
-        sg = SendGridAPIClient(os.getenv("SENDGRID_API_KEY"))
-        sg.send(message)
+        sg = SendGridAPIClient(api_key)
+        response = sg.send(message)
+
+        print("SendGrid Status Code:", response.status_code)
+        print("SendGrid Response Body:", response.body)
+        print("SendGrid Headers:", response.headers)
+
     except Exception as e:
         print("SendGrid error:", str(e))
