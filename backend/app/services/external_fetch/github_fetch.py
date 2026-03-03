@@ -11,9 +11,11 @@ async def fetch_github(username: str):
             user_res, repos_res = await asyncio.gather(user_req, repos_req)
 
         if user_res.status_code != 200:
+            print(user_res)
             return {"error": "GitHub user not found"}
 
         if repos_res.status_code != 200:
+            print(user_res)
             return {"error": "Failed to fetch repositories"}
 
         user = user_res.json()
