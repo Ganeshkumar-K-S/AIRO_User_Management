@@ -1,0 +1,417 @@
+{
+  "candidate": "Arun Kumar",
+  "roles_analyzed": 3,
+  "best_fit": "Machine Learning Engineer",
+  "comparison": [
+    {
+      "role": "Machine Learning Engineer",
+      "readiness_score": 85,
+      "alignment": "High",
+      "role_fit": "Strong",
+      "missing_required": 0,
+      "missing_preferred": 1,
+      "full_analysis": {
+        "match_summary": {
+          "overall_alignment": "High",
+          "readiness_score": 85,
+          "role_fit": "Strong"
+        },
+        "skills_analysis": {
+          "matched_required_skills": [
+            "Python",
+            "Machine Learning",
+            "Deep Learning",
+            "PyTorch",
+            "TensorFlow",
+            "Data Analysis",
+            "Statistics"
+          ],
+          "matched_preferred_skills": [
+            "NLP",
+            "Computer Vision",
+            "Docker",
+            "AWS"
+          ],
+          "partial_match_skills": [
+            "NumPy"
+          ],
+          "missing_required_skills": [],
+          "missing_preferred_skills": [
+            "Model Deployment"
+          ]
+        },
+        "experience_analysis": {
+          "relevant_experience": [
+            "Data Science Intern",
+            "Full Stack Developer Intern"
+          ],
+          "missing_experience": [],
+          "level_assessment": "Meets"
+        },
+        "domain_analysis": {
+          "resume_domain": [
+            "Artificial Intelligence",
+            "Web Development",
+            "Data Analysis"
+          ],
+          "jd_domain": "Artificial Intelligence",
+          "domain_match": "High"
+        },
+        "gap_insights": [
+          "The candidate has a strong foundation in machine learning and deep learning, with experience in Python, TensorFlow, and PyTorch.",
+          "The candidate has some experience with data analysis and statistics, but may benefit from additional training in model deployment."
+        ],
+        "learning_recommendations": [
+          {
+            "skill": "Model Deployment",
+            "reason": "The job description requires model deployment, and the candidate has no direct experience with it.",
+            "priority": "Medium"
+          }
+        ],
+        "resume_improvement_advice": [
+          "Consider adding more details about model deployment and collaboration with data engineers in the experience section.",
+          "Highlight any relevant projects or certifications that demonstrate expertise in machine learning and deep learning."
+        ],
+        "skill_gap_scores": [
+          {
+            "skill": "model deployment",
+            "tier": "preferred",
+            "gap": 1.0,
+            "evidence": "Not found in resume"
+          },
+          {
+            "skill": "computer vision",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "docker",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "nlp",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "aws",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "machine learning",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact, evidence=3), appears in 3 sections"
+          },
+          {
+            "skill": "python",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact, evidence=4), appears in 4 sections"
+          },
+          {
+            "skill": "deep learning",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          },
+          {
+            "skill": "tensorflow",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          },
+          {
+            "skill": "data analysis",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          },
+          {
+            "skill": "statistics",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          },
+          {
+            "skill": "pytorch",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          }
+        ]
+      }
+    },
+    {
+      "role": "Backend Python Developer",
+      "readiness_score": 70,
+      "alignment": "Medium",
+      "role_fit": "Moderate",
+      "missing_required": 1,
+      "missing_preferred": 1,
+      "full_analysis": {
+        "match_summary": {
+          "overall_alignment": "Medium",
+          "readiness_score": 70,
+          "role_fit": "Moderate"
+        },
+        "skills_analysis": {
+          "matched_required_skills": [
+            "Python",
+            "REST APIs",
+            "Git"
+          ],
+          "matched_preferred_skills": [
+            "PostgreSQL",
+            "Docker",
+            "AWS"
+          ],
+          "partial_match_skills": [
+            "MySQL"
+          ],
+          "missing_required_skills": [
+            "SQL"
+          ],
+          "missing_preferred_skills": [
+            "Flask"
+          ]
+        },
+        "experience_analysis": {
+          "relevant_experience": [
+            "Full Stack Developer Intern",
+            "Data Science Intern"
+          ],
+          "missing_experience": [
+            "Direct experience with PostgreSQL and Docker"
+          ],
+          "level_assessment": "Near"
+        },
+        "domain_analysis": {
+          "resume_domain": [
+            "Web Development",
+            "Data Analysis",
+            "Machine Learning"
+          ],
+          "jd_domain": "Backend Development",
+          "domain_match": "Medium"
+        },
+        "gap_insights": [
+          "Lack of direct experience with PostgreSQL and Docker",
+          "No explicit mention of SQL skills"
+        ],
+        "learning_recommendations": [
+          {
+            "skill": "SQL",
+            "reason": "Required skill for the job",
+            "priority": "High"
+          },
+          {
+            "skill": "Flask",
+            "reason": "Preferred skill for the job",
+            "priority": "Medium"
+          }
+        ],
+        "resume_improvement_advice": [
+          "Highlight SQL skills, if any",
+          "Emphasize experience with PostgreSQL and Docker",
+          "Consider adding a section for certifications or relevant coursework"
+        ],
+        "skill_gap_scores": [
+          {
+            "skill": "flask",
+            "tier": "preferred",
+            "gap": 1.0,
+            "evidence": "Not found in resume"
+          },
+          {
+            "skill": "sql",
+            "tier": "required",
+            "gap": 0.31,
+            "evidence": "Similar to 'MySQL' (similarity=0.69)"
+          },
+          {
+            "skill": "docker",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "postgresql",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "aws",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "git",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          },
+          {
+            "skill": "rest apis",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          },
+          {
+            "skill": "python",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact, evidence=4), appears in 4 sections"
+          }
+        ]
+      }
+    },
+    {
+      "role": "Frontend Developer",
+      "readiness_score": 60,
+      "alignment": "Medium",
+      "role_fit": "Moderate",
+      "missing_required": 1,
+      "missing_preferred": 1,
+      "full_analysis": {
+        "match_summary": {
+          "overall_alignment": "Medium",
+          "readiness_score": 60,
+          "role_fit": "Moderate"
+        },
+        "skills_analysis": {
+          "matched_required_skills": [
+            "JavaScript",
+            "React",
+            "HTML",
+            "CSS"
+          ],
+          "matched_preferred_skills": [
+            "GraphQL",
+            "CI/CD",
+            "Figma"
+          ],
+          "partial_match_skills": [
+            "Node.js"
+          ],
+          "missing_required_skills": [
+            "TypeScript"
+          ],
+          "missing_preferred_skills": [
+            "Next.js"
+          ]
+        },
+        "experience_analysis": {
+          "relevant_experience": [
+            "Full Stack Developer Intern",
+            "Mobile App Developer"
+          ],
+          "missing_experience": [
+            "Frontend development experience with a focus on UI/UX"
+          ],
+          "level_assessment": "Near"
+        },
+        "domain_analysis": {
+          "resume_domain": [
+            "Web Development",
+            "Data Analysis",
+            "Machine Learning"
+          ],
+          "jd_domain": "Frontend Development",
+          "domain_match": "Medium"
+        },
+        "gap_insights": [
+          "Lack of experience with TypeScript",
+          "Limited experience with UI/UX design",
+          "No direct experience as a Frontend Developer"
+        ],
+        "learning_recommendations": [
+          {
+            "skill": "TypeScript",
+            "reason": "Required skill for the job",
+            "priority": "High"
+          },
+          {
+            "skill": "Next.js",
+            "reason": "Preferred skill for the job",
+            "priority": "Medium"
+          },
+          {
+            "skill": "UI/UX design principles",
+            "reason": "Important for frontend development",
+            "priority": "Medium"
+          }
+        ],
+        "resume_improvement_advice": [
+          "Highlight relevant frontend development experience",
+          "Emphasize UI/UX design skills and knowledge",
+          "Consider adding a section for certifications or relevant coursework"
+        ],
+        "skill_gap_scores": [
+          {
+            "skill": "typescript",
+            "tier": "required",
+            "gap": 1.0,
+            "evidence": "Not found in resume"
+          },
+          {
+            "skill": "next.js",
+            "tier": "preferred",
+            "gap": 0.49,
+            "evidence": "Similar to 'JavaScript' (similarity=0.51)"
+          },
+          {
+            "skill": "graphql",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "figma",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "ci/cd",
+            "tier": "preferred",
+            "gap": 0.2,
+            "evidence": "Listed in skills (score=0.8, preferred_exact)"
+          },
+          {
+            "skill": "react",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact, evidence=2), appears in 2 sections"
+          },
+          {
+            "skill": "html",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          },
+          {
+            "skill": "javascript",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact, evidence=2), appears in 2 sections"
+          },
+          {
+            "skill": "css",
+            "tier": "required",
+            "gap": 0.0,
+            "evidence": "Listed in skills (score=1.0, required_exact)"
+          }
+        ]
+      }
+    }
+  ]
+}

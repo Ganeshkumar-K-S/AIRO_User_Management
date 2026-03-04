@@ -1,0 +1,142 @@
+{
+  "match_summary": {
+    "overall_alignment": "High",
+    "readiness_score": 85,
+    "role_fit": "Strong"
+  },
+  "skills_analysis": {
+    "matched_required_skills": [
+      "Python",
+      "Machine Learning",
+      "Deep Learning",
+      "PyTorch",
+      "TensorFlow",
+      "Data Analysis",
+      "Statistics"
+    ],
+    "matched_preferred_skills": [
+      "NLP",
+      "Computer Vision",
+      "Docker",
+      "AWS"
+    ],
+    "partial_match_skills": [
+      "NumPy"
+    ],
+    "missing_required_skills": [],
+    "missing_preferred_skills": [
+      "Model Deployment"
+    ]
+  },
+  "experience_analysis": {
+    "relevant_experience": [
+      "Data Science Intern",
+      "Full Stack Developer Intern",
+      "Image Classification System",
+      "Resume Parser NLP",
+      "Sales Forecasting"
+    ],
+    "missing_experience": [],
+    "level_assessment": "Meets"
+  },
+  "domain_analysis": {
+    "resume_domain": [
+      "Artificial Intelligence",
+      "Web Development",
+      "Data Analysis"
+    ],
+    "jd_domain": "Artificial Intelligence",
+    "domain_match": "High"
+  },
+  "gap_insights": [
+    "The candidate has a strong background in machine learning and deep learning, with experience in Python, TensorFlow, and PyTorch.",
+    "The candidate has some experience in NLP and computer vision, which are preferred skills for the job.",
+    "The candidate is missing experience in model deployment, which is a preferred skill for the job."
+  ],
+  "learning_recommendations": [
+    {
+      "skill": "Model Deployment",
+      "reason": "The candidate is missing experience in model deployment, which is a preferred skill for the job.",
+      "priority": "Medium"
+    }
+  ],
+  "resume_improvement_advice": [
+    "Highlight experience in machine learning and deep learning",
+    "Emphasize skills in NLP and computer vision",
+    "Consider adding a section on model deployment experience or relevant projects"
+  ],
+  "skill_gap_scores": [
+    {
+      "skill": "model deployment",
+      "tier": "preferred",
+      "gap": 1.0,
+      "evidence": "Not found in resume"
+    },
+    {
+      "skill": "computer vision",
+      "tier": "preferred",
+      "gap": 0.2,
+      "evidence": "Listed in skills (score=0.8, preferred_exact)"
+    },
+    {
+      "skill": "docker",
+      "tier": "preferred",
+      "gap": 0.2,
+      "evidence": "Listed in skills (score=0.8, preferred_exact)"
+    },
+    {
+      "skill": "nlp",
+      "tier": "preferred",
+      "gap": 0.2,
+      "evidence": "Listed in skills (score=0.8, preferred_exact)"
+    },
+    {
+      "skill": "aws",
+      "tier": "preferred",
+      "gap": 0.2,
+      "evidence": "Listed in skills (score=0.8, preferred_exact)"
+    },
+    {
+      "skill": "machine learning",
+      "tier": "required",
+      "gap": 0.0,
+      "evidence": "Listed in skills (score=1.0, required_exact, evidence=3), appears in 3 sections"
+    },
+    {
+      "skill": "python",
+      "tier": "required",
+      "gap": 0.0,
+      "evidence": "Listed in skills (score=1.0, required_exact, evidence=4), appears in 4 sections"
+    },
+    {
+      "skill": "deep learning",
+      "tier": "required",
+      "gap": 0.0,
+      "evidence": "Listed in skills (score=1.0, required_exact)"
+    },
+    {
+      "skill": "tensorflow",
+      "tier": "required",
+      "gap": 0.0,
+      "evidence": "Listed in skills (score=1.0, required_exact)"
+    },
+    {
+      "skill": "data analysis",
+      "tier": "required",
+      "gap": 0.0,
+      "evidence": "Listed in skills (score=1.0, required_exact)"
+    },
+    {
+      "skill": "statistics",
+      "tier": "required",
+      "gap": 0.0,
+      "evidence": "Listed in skills (score=1.0, required_exact)"
+    },
+    {
+      "skill": "pytorch",
+      "tier": "required",
+      "gap": 0.0,
+      "evidence": "Listed in skills (score=1.0, required_exact)"
+    }
+  ]
+}

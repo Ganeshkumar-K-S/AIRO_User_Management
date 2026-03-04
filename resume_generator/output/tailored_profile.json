@@ -1,0 +1,132 @@
+{
+  "name": "Arun Kumar",
+  "summary": "Versatile software engineer with experience in web development, data analysis, machine learning, mobile apps, and UI design. Built multiple full-stack applications and ML models across domains including NLP, computer vision, and analytics.",
+  "skills": [
+    "Python",
+    "TensorFlow",
+    "PyTorch",
+    "Deep Learning",
+    "Machine Learning",
+    "Data Analysis",
+    "Statistics",
+    "Docker",
+    "AWS",
+    "NLP",
+    "Computer Vision",
+    "NumPy"
+  ],
+  "projects": [
+    {
+      "name": "Image Classification System",
+      "description": "Trained CNN model to classify plant diseases using TensorFlow and Python.",
+      "skills": [
+        "Python",
+        "TensorFlow",
+        "Deep Learning"
+      ]
+    },
+    {
+      "name": "Resume Parser NLP",
+      "description": "Developed NLP pipeline to extract skills and entities from resumes using Python and NLP.",
+      "skills": [
+        "Python",
+        "NLP"
+      ]
+    },
+    {
+      "name": "Sales Forecasting",
+      "description": "Time-series forecasting using ARIMA and regression models with Python and Data Analysis.",
+      "skills": [
+        "Python",
+        "Machine Learning",
+        "Data Analysis",
+        "Statistics"
+      ]
+    },
+    {
+      "name": "E-commerce Web Platform",
+      "description": "Built full-stack MERN e-commerce app with authentication, payments, and admin dashboard.",
+      "skills": [
+        "Python"
+      ]
+    },
+    {
+      "name": "Chat Application",
+      "description": "Real-time chat app using WebSockets and Firebase backend.",
+      "skills": [
+        "Python"
+      ]
+    },
+    {
+      "name": "Portfolio Website",
+      "description": "Responsive personal portfolio with animations and dark mode.",
+      "skills": [
+        "Python"
+      ]
+    }
+  ],
+  "experience": [
+    {
+      "role": "Data Science Intern",
+      "company": "Insight Analytics",
+      "description": "Built predictive models and performed exploratory data analysis on business datasets using Python and Machine Learning.",
+      "skills": [
+        "Python",
+        "Machine Learning"
+      ]
+    },
+    {
+      "role": "Full Stack Developer Intern",
+      "company": "TechSoft Solutions",
+      "description": "Developed REST APIs and frontend dashboards for enterprise clients using MERN stack.",
+      "skills": [
+        "Python"
+      ]
+    },
+    {
+      "role": "Mobile App Developer",
+      "company": "AppWorks",
+      "description": "Developed cross-platform mobile apps using Flutter and Firebase.",
+      "skills": [
+        "Python"
+      ]
+    }
+  ],
+  "education": [
+    {
+      "degree": "B.E. Computer Science",
+      "institution": "ABC Engineering College",
+      "year": "2024"
+    }
+  ],
+  "professional_summary": "Highly motivated machine learning engineer with experience in developing and training machine learning models, analyzing large datasets, and building deep learning pipelines. Skilled in Python, TensorFlow, PyTorch, and Deep Learning. Proficient in Data Analysis and Statistics.",
+  "skills_categorized": {
+    "Machine Learning": [
+      "Python",
+      "TensorFlow",
+      "PyTorch",
+      "Deep Learning",
+      "Machine Learning"
+    ],
+    "Data Analysis": [
+      "Data Analysis",
+      "Statistics",
+      "NumPy"
+    ],
+    "Cloud and Deployment": [
+      "Docker",
+      "AWS"
+    ],
+    "Artificial Intelligence": [
+      "NLP",
+      "Computer Vision"
+    ]
+  },
+  "section_order": [
+    "professional_summary",
+    "skills",
+    "experience",
+    "projects",
+    "education"
+  ]
+}

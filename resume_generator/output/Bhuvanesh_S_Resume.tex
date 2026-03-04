@@ -1,0 +1,176 @@
+\documentclass[a4paper,10pt]{article}
+
+% Packages
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage{graphicx}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+
+% Page settings
+\pagestyle{fancy}
+\fancyhf{} 
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Margins - optimized for A4
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-0.6in}
+\addtolength{\textheight}{1.2in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Section formatting with thin horizontal line
+\titleformat{\section}{
+  \vspace{-8pt}\scshape\raggedright\large\bfseries
+}{}{0em}{}[\color{black}\titlerule\vspace{-6pt}]
+
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{#1 \vspace{-2pt}}
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{#2} \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textit{\small#2} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=0.2in]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+%----------HEADER WITH PHOTO----------
+\begin{minipage}[t]{0.75\textwidth}
+  \begin{center}
+    {\Huge\bfseries\scshape Bhuvanesh S} \\[8pt]
+    \small 
+    \href{mailto:bhuvanesh2310766@ssn.edu.in}{bhuvanesh2310766@ssn.edu.in}%
+     $|$ +91 8438789100%
+     $|$ \href{https://www.linkedin.com/in/bhuvanesh-cse}{LinkedIn}%
+     $|$ \href{https://github.com/BHUVANESH-SSN}{GitHub}%
+      \end{center}
+\end{minipage}%
+\begin{minipage}[t]{0.25\textwidth}
+  \raggedleft
+  \vspace{-20pt}
+  \includegraphics[width=2.5cm,height=3cm,keepaspectratio]{data/Bhuvanesh\_S\_image.jpeg}
+\end{minipage}
+
+\vspace{8pt}
+
+%----------PROFESSIONAL SUMMARY----------
+\section{Professional Summary}
+\small{Computer Science student at SSN College of Engineering with strong interest in software engineering and machine learning. Skilled in Web Technologies and Machine Learning algorithms. Seeking internship opportunities to apply skills in real-world software and AI-driven projects.}
+\vspace{6pt}
+
+
+%----------EDUCATION----------
+\section{Education}
+\resumeSubHeadingListStart
+  \resumeSubheading
+    {B.E. in Computer Science and Engineering}{2022-2026}
+    {SSN College of Engineering}{CGPA: 8.5/10}
+\resumeSubHeadingListEnd
+\vspace{4pt}
+
+%----------SKILLS----------
+\section{Technical Skills}
+\small{
+    \textbf{Languages:} Python, Java, C++, JavaScript, SQL \\
+    \textbf{Web Technologies:} React, Node.js, Express, Django, Flask \\
+    \textbf{ML/AI:} TensorFlow, PyTorch, scikit-learn, Pandas, NumPy \\
+    \textbf{Databases:} MySQL, MongoDB, PostgreSQL \\
+    \textbf{Tools:} Git, Docker, Linux, VS Code \\
+  }
+\vspace{6pt}
+
+%----------WORK EXPERIENCE----------
+\section{Professional Experience}
+\resumeSubHeadingListStart
+  \resumeSubheading
+    {Software Development Intern}{Jun 2024 - Aug 2024}
+    {TechCorp Solutions}{Chennai, India}
+        \resumeItemListStart
+                  \resumeItem{Developed RESTful APIs using Node.js and Express, improving response time by 30\%}
+            \resumeItem{Implemented authentication system using JWT and OAuth 2.0 for secure user management}
+            \resumeItem{Collaborated with cross-functional teams using Agile methodologies}
+                \resumeItemListEnd
+          \resumeSubheading
+    {ML Research Intern}{Jan 2024 - May 2024}
+    {AI Research Lab, SSN}{}
+        \resumeItemListStart
+                  \resumeItem{Built image classification model achieving 92\% accuracy using TensorFlow and CNN}
+            \resumeItem{Preprocessed and augmented dataset of 50,000+ images for improved model performance}
+                \resumeItemListEnd
+        \resumeSubHeadingListEnd
+\vspace{4pt}
+
+%----------PROJECTS----------
+\section{Projects}
+\resumeSubHeadingListStart
+  \resumeProjectHeading
+    {\href{https://github.com/username/project}{Real-time Object Detection System} $|$ \textit{\small Python, YOLOv5, OpenCV, Flask}}{}
+        \resumeItemListStart
+                  \resumeItem{Developed real-time object detection web application using YOLOv5 and Flask}
+            \resumeItem{Achieved 85\% mAP on custom dataset with 30+ FPS performance}
+            \resumeItem{Deployed on cloud with Docker containerization}
+                \resumeItemListEnd
+      \resumeProjectHeading
+    {E-Commerce Platform $|$ \textit{\small React, Node.js, MongoDB, Stripe}}{}
+        \resumeItemListStart
+                  \resumeItem{Built full-stack e-commerce application with payment integration}
+            \resumeItem{Implemented cart management, order tracking, and user authentication}
+            \resumeItem{Designed RESTful API serving 1000+ concurrent requests}
+                \resumeItemListEnd
+      \resumeProjectHeading
+    {Sentiment Analysis Tool $|$ \textit{\small Python, NLTK, Transformers, Streamlit}}{}
+        \resumeItemListStart
+            \resumeItem{Created NLP tool for sentiment analysis using BERT model with 90\% accuracy on product reviews}
+          \resumeItemListEnd
+    \resumeSubHeadingListEnd
+\vspace{4pt}
+
+%----------CERTIFICATIONS----------
+\section{Certifications}
+\resumeSubHeadingListStart
+    \item \small{AWS Certified Cloud Practitioner -- Amazon Web Services (2024)}
+      \item \small{Deep Learning Specialization -- Coursera (2023)}
+      \item \small{Google Cloud Associate Engineer}
+  \resumeSubHeadingListEnd
+\vspace{4pt}
+
+%----------ACHIEVEMENTS----------
+\section{Achievements \& Awards}
+\resumeSubHeadingListStart
+  \item \small{Winner of SSN College Hackathon 2024 - Built AI-powered chatbot}
+  \item \small{Published research paper in IEEE conference on Machine Learning applications}
+  \item \small{Rank 1 in departmental programming contest}
+\resumeSubHeadingListEnd
+\vspace{4pt}
+
+\end{document}

@@ -1,0 +1,209 @@
+\documentclass[a4paper,10pt]{article}
+
+% Packages
+\usepackage{latexsym}
+\usepackage[empty]{fullpage}
+\usepackage{titlesec}
+\usepackage{marvosym}
+\usepackage{graphicx}
+\usepackage[usenames,dvipsnames]{color}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage[hidelinks]{hyperref}
+\usepackage{fancyhdr}
+\usepackage{tabularx}
+
+% Theme color (injected by renderer, defaults to dark gray)
+\definecolor{primary}{HTML}{\VAR{theme_primary_color|default('2D3748', true)}}
+
+% Page settings
+\pagestyle{fancy}
+\fancyhf{} 
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\footrulewidth}{0pt}
+
+% Margins - optimized for A4
+\addtolength{\oddsidemargin}{-0.5in}
+\addtolength{\evensidemargin}{-0.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-0.6in}
+\addtolength{\textheight}{1.2in}
+
+\urlstyle{same}
+\raggedbottom
+\raggedright
+\setlength{\tabcolsep}{0in}
+
+% Section formatting with thin horizontal line
+\titleformat{\section}{
+  \vspace{\VAR{section_vspace|default('-8pt', true)}}\scshape\raggedright\large\bfseries
+}{}{0em}{}[\color{primary}\titlerule\vspace{-6pt}]
+
+% Custom commands
+\newcommand{\resumeItem}[1]{
+  \item\small{#1 \vspace{-2pt}}
+}
+
+\newcommand{\resumeSubheading}[4]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}[t]{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textbf{#2} \\
+      \textit{\small#3} & \textit{\small #4} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+\newcommand{\resumeProjectHeading}[2]{
+  \vspace{-1pt}\item
+    \begin{tabular*}{0.97\textwidth}{l@{\extracolsep{\fill}}r}
+      \textbf{#1} & \textit{\small#2} \\
+    \end{tabular*}\vspace{-5pt}
+}
+
+\renewcommand\labelitemii{$\vcenter{\hbox{\tiny$\bullet$}}$}
+
+\newcommand{\resumeSubHeadingListStart}{\begin{itemize}[leftmargin=0.15in, label={}]}
+\newcommand{\resumeSubHeadingListEnd}{\end{itemize}}
+\newcommand{\resumeItemListStart}{\begin{itemize}[leftmargin=0.2in]}
+\newcommand{\resumeItemListEnd}{\end{itemize}\vspace{-5pt}}
+
+\begin{document}
+
+%----------HEADER WITH PHOTO----------
+\begin{minipage}[t]{0.75\textwidth}
+  \begin{center}
+    {\Huge\bfseries\scshape \VAR{name}} \\[8pt]
+    \small 
+    \BLOCK{if email}\href{mailto:\VAR{email}}{\VAR{email}}\BLOCK{endif}%
+    \BLOCK{if phone} $|$ \VAR{phone}\BLOCK{endif}%
+    \BLOCK{if linkedin} $|$ \href{\VAR{linkedin}}{LinkedIn}\BLOCK{endif}%
+    \BLOCK{if github} $|$ \href{\VAR{github}}{GitHub}\BLOCK{endif}%
+    \BLOCK{if website} $|$ \href{\VAR{website}}{Portfolio}\BLOCK{endif}
+  \end{center}
+\end{minipage}%
+\BLOCK{if photo}
+\begin{minipage}[t]{0.25\textwidth}
+  \raggedleft
+  \vspace{-20pt}
+  \includegraphics[width=2.5cm,height=3cm,keepaspectratio]{\VAR{photo}}
+\end{minipage}
+\BLOCK{endif}
+
+\vspace{8pt}
+
+%----------PROFESSIONAL SUMMARY----------
+\BLOCK{if professional_summary}
+\section{Professional Summary}
+\small{\VAR{professional_summary}}
+\vspace{6pt}
+\BLOCK{endif}
+
+\BLOCK{if career_objective}
+\BLOCK{if not professional_summary}
+\section{Career Objective}
+\small{\VAR{career_objective}}
+\vspace{6pt}
+\BLOCK{endif}
+\BLOCK{endif}
+
+%----------EDUCATION----------
+\BLOCK{if education}
+\section{Education}
+\resumeSubHeadingListStart
+\BLOCK{for edu in education}
+  \resumeSubheading
+    {\VAR{edu.degree}\BLOCK{if edu.field} in \VAR{edu.field}\BLOCK{endif}}{\BLOCK{if edu.year}\VAR{edu.year}\BLOCK{endif}}
+    {\BLOCK{if edu.institution}\VAR{edu.institution}\BLOCK{elif edu.college}\VAR{edu.college}\BLOCK{endif}}{\BLOCK{if edu.gpa}CGPA: \VAR{edu.gpa}\BLOCK{endif}}
+\BLOCK{endfor}
+\resumeSubHeadingListEnd
+\vspace{4pt}
+\BLOCK{endif}
+
+%----------SKILLS----------
+\BLOCK{if skills}
+\section{Technical Skills}
+\small{
+\BLOCK{if skills_categorized}
+  \BLOCK{for category, skill_list in skills_categorized.items()}
+  \textbf{\VAR{category}:} \BLOCK{for skill in skill_list}\VAR{skill}\BLOCK{if not loop.last}, \BLOCK{endif}\BLOCK{endfor} \\
+  \BLOCK{endfor}
+\BLOCK{else}
+  \textbf{Technologies:} \BLOCK{for skill in skills}\VAR{skill}\BLOCK{if not loop.last}, \BLOCK{endif}\BLOCK{endfor}
+\BLOCK{endif}
+}
+\vspace{6pt}
+\BLOCK{endif}
+
+%----------WORK EXPERIENCE----------
+\BLOCK{if experience}
+\section{Experience}
+\resumeSubHeadingListStart
+\BLOCK{for exp in experience}
+  \resumeSubheading
+    {\VAR{exp.role}}{\BLOCK{if exp.duration}\VAR{exp.duration}\BLOCK{endif}}
+    {\BLOCK{if exp.company}\VAR{exp.company}\BLOCK{endif}}{\BLOCK{if exp.location}\VAR{exp.location}\BLOCK{endif}}
+    \BLOCK{if exp.description}
+    \resumeItemListStart
+      \BLOCK{if exp.description is string}
+      \resumeItem{\VAR{exp.description}}
+      \BLOCK{else}
+      \BLOCK{for item in exp.description}
+      \resumeItem{\VAR{item}}
+      \BLOCK{endfor}
+      \BLOCK{endif}
+    \resumeItemListEnd
+    \BLOCK{endif}
+\BLOCK{endfor}
+\resumeSubHeadingListEnd
+\vspace{4pt}
+\BLOCK{endif}
+
+%----------PROJECTS----------
+\BLOCK{if projects}
+\section{Projects}
+\resumeSubHeadingListStart
+\BLOCK{for project in projects}
+  \resumeProjectHeading
+    {\BLOCK{if project.link}\href{\VAR{project.link}}{\VAR{project.title}}\BLOCK{else}\VAR{project.title}\BLOCK{endif}\BLOCK{if project.tech} $|$ \textit{\small \BLOCK{for tech in project.tech}\VAR{tech}\BLOCK{if not loop.last}, \BLOCK{endif}\BLOCK{endfor}}\BLOCK{endif}}{}
+    \BLOCK{if project.description}
+    \resumeItemListStart
+      \BLOCK{if project.description is string}
+      \resumeItem{\VAR{project.description}}
+      \BLOCK{else}
+      \BLOCK{for item in project.description}
+      \resumeItem{\VAR{item}}
+      \BLOCK{endfor}
+      \BLOCK{endif}
+    \resumeItemListEnd
+    \BLOCK{endif}
+\BLOCK{endfor}
+\resumeSubHeadingListEnd
+\vspace{4pt}
+\BLOCK{endif}
+
+%----------CERTIFICATIONS----------
+\BLOCK{if certifications}
+\section{Certifications}
+\resumeSubHeadingListStart
+\BLOCK{for cert in certifications}
+  \BLOCK{if cert is string}
+  \item \small{\VAR{cert}}
+  \BLOCK{else}
+  \item \small{\BLOCK{if cert.link}\href{\VAR{cert.link}}{\VAR{cert.name}}\BLOCK{else}\VAR{cert.name}\BLOCK{endif}\BLOCK{if cert.issuer} -- \VAR{cert.issuer}\BLOCK{endif}\BLOCK{if cert.date} (\VAR{cert.date})\BLOCK{endif}}
+  \BLOCK{endif}
+\BLOCK{endfor}
+\resumeSubHeadingListEnd
+\vspace{4pt}
+\BLOCK{endif}
+
+%----------ACHIEVEMENTS----------
+\BLOCK{if achievements}
+\section{Achievements}
+\resumeSubHeadingListStart
+\BLOCK{for achievement in achievements}
+  \item \small{\VAR{achievement}}
+\BLOCK{endfor}
+\resumeSubHeadingListEnd
+\vspace{4pt}
+\BLOCK{endif}
+
+\end{document}
