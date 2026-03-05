@@ -12,6 +12,31 @@ interface JDSectionProps {
   setIsGenerating: (val: boolean) => void;
 }
 
+const C = {
+  ink: '#0f172a',
+  paper: '#f8fafc',
+  surface: '#ffffff',
+  accent: '#7c3aed',
+  accentHov: '#6d28d9',
+  accentSoft: '#ede9fe',
+  accent2: '#ef4444',
+  muted: '#64748b',
+  border: '#e2e8f0',
+  success: '#16a34a',
+};
+
+const inp: React.CSSProperties = {
+  width: '100%', padding: '14px 18px', borderRadius: 14,
+  border: `1.5px solid ${C.border}`, fontFamily: 'Montserrat, sans-serif', fontSize: 14.5,
+  outline: 'none', background: C.surface, color: C.ink, boxSizing: 'border-box', transition: 'all 0.2s',
+  resize: 'none',
+};
+
+const mlbl: React.CSSProperties = {
+  fontSize: 12.5, fontWeight: 700, color: C.ink, marginBottom: 8,
+  letterSpacing: '0.3px', display: 'block', fontFamily: 'Montserrat, sans-serif'
+};
+
 const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps) => {
   const [activeTab, setActiveTab] = useState<TabType>("Text");
   const [jdText, setJdText] = useState("");
@@ -77,11 +102,11 @@ const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps
   };
 
   return (
-    <div className="neu-card flex flex-col gap-5 h-full">
-      <h2 className="text-lg font-semibold text-foreground">Upload Job Description</h2>
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24, padding: '36px 40px', boxShadow: '0 4px 28px rgba(15,23,42,0.05)', display: 'flex', flexDirection: 'column', gap: 24, height: '100%' }}>
+      <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 24, color: C.ink, margin: 0, letterSpacing: '-0.5px' }}>Upload Job Description</h2>
 
       {/* Tabs */}
-      <div className="flex gap-2 flex-wrap">
+      <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -90,7 +115,12 @@ const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps
               setFile(null);
               setError(null);
             }}
-            className={`neu-tab ${activeTab === tab ? "active" : ""}`}
+            style={{
+              padding: '8px 20px', borderRadius: 12, fontFamily: 'Montserrat, sans-serif', fontSize: 13.5, fontWeight: 700, cursor: 'pointer', transition: 'all 0.2s',
+              background: activeTab === tab ? C.accentSoft : 'transparent',
+              color: activeTab === tab ? C.accent : C.muted,
+              border: `1.5px solid ${activeTab === tab ? C.accentSoft : C.border}`
+            }}
           >
             {tab}
           </button>
@@ -98,26 +128,31 @@ const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps
       </div>
 
       {/* Dynamic Input Area */}
-      <div className="flex-1 min-h-0">
+      <div style={{ flex: 1, minHeight: 0 }}>
         {activeTab === "Text" && (
           <textarea
             value={jdText}
             onChange={(e) => setJdText(e.target.value)}
             placeholder="Paste your job description here..."
-            className="w-full h-48 md:h-64 rounded-xl p-4 bg-card text-foreground text-sm resize-none transition-all duration-300"
-            style={{ boxShadow: "var(--shadow-neumorphic-inset)", outline: "none" }}
+            style={{ ...inp, height: '100%', minHeight: 180 }}
+            onFocus={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.boxShadow = `0 0 0 3px ${C.accent}15`; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.boxShadow = 'none'; }}
           />
         )}
 
         {activeTab === "URL" && (
-          <div className="flex items-center gap-3 rounded-xl p-4 bg-card neu-inset">
-            <Link className="w-5 h-5 text-muted-foreground" />
+          <div style={{ position: 'relative' }}>
+            <div style={{ position: 'absolute', left: 16, top: '50%', transform: 'translateY(-50%)', color: C.muted, display: 'flex' }}>
+              <Link size={18} />
+            </div>
             <input
               type="url"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="Paste job listing URL..."
-              className="flex-1 bg-transparent text-sm text-foreground focus:outline-none placeholder:text-muted-foreground"
+              style={{ ...inp, paddingLeft: 44 }}
+              onFocus={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.boxShadow = `0 0 0 3px ${C.accent}15`; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.boxShadow = 'none'; }}
             />
           </div>
         )}
@@ -128,7 +163,7 @@ const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps
               ref={fileInputRef}
               type="file"
               accept={`.${activeTab.toLowerCase()}`}
-              className="hidden"
+              style={{ display: 'none' }}
               onChange={(e) => handleFileChange(e.target.files?.[0] ?? null)}
             />
             <div
@@ -140,23 +175,26 @@ const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps
                 setDragOver(false);
                 handleFileChange(e.dataTransfer.files?.[0] ?? null);
               }}
-              className={`border-2 border-dashed rounded-xl p-10 flex flex-col items-center justify-center gap-3 cursor-pointer transition-all duration-300 hover:scale-[1.02] group ${dragOver ? "border-foreground/50 scale-[1.02]" : "border-border hover:border-foreground/30"
-                }`}
+              style={{
+                border: `2px dashed ${dragOver ? C.accent : C.border}`,
+                borderRadius: 16, padding: '48px 24px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, cursor: 'pointer', transition: 'all 0.2s',
+                background: dragOver ? C.accentSoft : 'transparent'
+              }}
+              onMouseEnter={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.background = `${C.accentSoft}40`; } }}
+              onMouseLeave={(e) => { if (!dragOver) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.background = 'transparent'; } }}
             >
-              <div className="neu-btn p-3 transition-all duration-300 group-hover:scale-110 bg-card">
-                <Upload className="w-6 h-6 text-muted-foreground" />
+              <div style={{ width: 64, height: 64, borderRadius: 20, background: C.accentSoft, display: 'flex', alignItems: 'center', justifyContent: 'center', color: C.accent }}>
+                <Upload size={28} />
               </div>
               {file ? (
-                <p className="text-sm font-medium text-foreground">{file.name}</p>
+                <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 15, fontWeight: 700, color: C.ink, margin: 0 }}>{file.name}</p>
               ) : (
-                <>
-                  <p className="text-sm text-muted-foreground">
-                    Drop your{" "}
-                    <span className="font-semibold text-foreground">.{activeTab.toLowerCase()}</span>{" "}
-                    file here
+                <div style={{ textAlign: 'center' }}>
+                  <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 15, color: C.muted, margin: '0 0 6px' }}>
+                    Drop your <strong style={{ color: C.ink }}>.{activeTab.toLowerCase()}</strong> file here
                   </p>
-                  <p className="text-xs text-muted-foreground">or click to browse</p>
-                </>
+                  <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, color: C.muted, margin: 0 }}>or click to browse</p>
+                </div>
               )}
             </div>
           </>
@@ -164,37 +202,43 @@ const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps
       </div>
 
       {/* Resume Input Area */}
-      <div className="w-full mt-2">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Upload Resume (JSON)</h3>
+      <div style={{ width: '100%', marginTop: 8 }}>
+        <label style={mlbl}>Upload Resume (JSON)</label>
         <textarea
           value={resumeText}
           onChange={(e) => setResumeText(e.target.value)}
           placeholder='Paste your resume in JSON format here... e.g. {"name": "Arun Kumar", "skills": ["Python"]}'
-          className="w-full h-32 md:h-48 rounded-xl p-4 bg-card text-foreground text-sm resize-none transition-all duration-300"
-          style={{ boxShadow: "var(--shadow-neumorphic-inset)", outline: "none" }}
+          style={{ ...inp, height: 140 }}
+          onFocus={(e) => { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.boxShadow = `0 0 0 3px ${C.accent}15`; }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.boxShadow = 'none'; }}
         />
       </div>
 
       {/* Error message */}
       {error && (
-        <p className="text-xs text-red-500 text-center">{error}</p>
+        <div style={{ background: '#fff0f0', border: `1px solid ${C.accent2}40`, borderRadius: 12, padding: '12px 16px', color: C.accent2, fontSize: 13.5, fontFamily: 'Montserrat, sans-serif', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span>⚠️</span> {error}
+        </div>
       )}
 
       {/* Generate Button */}
       <button
         onClick={handleGenerate}
         disabled={isGenerating}
-        className="w-full py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm transition-all duration-300 hover:scale-[1.02] active:scale-95 disabled:opacity-60 flex items-center justify-center gap-2"
-        style={{ boxShadow: "var(--shadow-neumorphic)" }}
+        onMouseEnter={e => { if (!isGenerating) { e.currentTarget.style.background = C.accentHov; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 8px 28px ${C.accent}45`; } }}
+        onMouseLeave={e => { if (!isGenerating) { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 20px ${C.accent}35`; } }}
+        style={{
+          width: '100%', padding: 16, background: C.accent, color: '#fff', border: 'none', borderRadius: 14, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 15, cursor: isGenerating ? 'not-allowed' : 'pointer', transition: 'all 0.2s cubic-bezier(.4,0,.2,1)', boxShadow: `0 4px 20px ${C.accent}35`, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, letterSpacing: '0.2px', opacity: isGenerating ? 0.7 : 1
+        }}
       >
         {isGenerating ? (
           <>
-            <Loader2 className="w-4 h-4 animate-spin" />
-            Generating...
+            <Loader2 size={18} className="animate-spin" />
+            Analyzing & Generating...
           </>
         ) : (
           <>
-            <FileText className="w-4 h-4" />
+            <FileText size={18} />
             Generate Resume
           </>
         )}

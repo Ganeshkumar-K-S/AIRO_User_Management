@@ -5,17 +5,11 @@ from pydantic import BaseModel
 from typing import Optional
 import json
 
-app = FastAPI()
+from fastapi import APIRouter
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+resume_router = APIRouter()
 
-@app.get("/")
+@resume_router.get("/")
 def read_root():
     return {"status": "ok"}
 
@@ -29,7 +23,7 @@ from resume_generator import generate_tailored_resume
 from resume_generator.tailoring.gap_analyzer import analyze_gap
 from resume_generator.tailoring.ats_scorer import ats_with_jd, ats_without_jd, extract_noun_keywords
 
-@app.post("/api/extract")
+@resume_router.post("/api/extract")
 async def extract_and_tailor(
     input_type: str = Form(...),
     text: Optional[str] = Form(None),
@@ -142,7 +136,7 @@ async def extract_and_tailor(
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/api/download")
+@resume_router.get("/api/download")
 async def download_pdf(path: str):
     import os
     if not os.path.exists(path):

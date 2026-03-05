@@ -8,14 +8,27 @@ interface GeneratedResumeProps {
   onRegenerate: () => void;
 }
 
+const C = {
+  ink: '#0f172a',
+  paper: '#f8fafc',
+  surface: '#ffffff',
+  accent: '#7c3aed',
+  accentHov: '#6d28d9',
+  accentSoft: '#ede9fe',
+  accent2: '#ef4444',
+  muted: '#64748b',
+  border: '#e2e8f0',
+  success: '#16a34a',
+};
+
 const GeneratedResume = ({ resumeData, pdfPath, onRegenerate }: GeneratedResumeProps) => {
   if (!resumeData) return null;
 
   return (
-    <div className="neu-card animate-fade-slide-up">
-      <div className="flex items-center justify-between mb-5">
-        <h2 className="text-lg font-semibold text-foreground">Generated Resume</h2>
-        <div className="flex gap-2">
+    <div style={{ background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24, padding: '36px 40px', boxShadow: '0 4px 28px rgba(15,23,42,0.05)' }} className="animate-fade-slide-up">
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <h2 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 24, color: C.ink, margin: 0, letterSpacing: '-0.5px' }}>Generated Resume</h2>
+        <div style={{ display: 'flex', gap: 12 }}>
           <button
             onClick={() => {
               if (pdfPath) {
@@ -24,42 +37,59 @@ const GeneratedResume = ({ resumeData, pdfPath, onRegenerate }: GeneratedResumeP
               }
             }}
             disabled={!pdfPath}
-            className="neu-btn flex items-center gap-2 text-sm bg-card text-foreground disabled:opacity-50"
+            onMouseEnter={e => { if (pdfPath) { e.currentTarget.style.borderColor = C.accent; e.currentTarget.style.color = C.accent; } }}
+            onMouseLeave={e => { if (pdfPath) { e.currentTarget.style.borderColor = C.border; e.currentTarget.style.color = C.muted; } }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, background: 'transparent',
+              border: `1.5px solid ${C.border}`, borderRadius: 12, padding: '10px 16px',
+              color: C.muted, fontFamily: 'Montserrat, sans-serif', fontWeight: 700, fontSize: 13.5,
+              cursor: pdfPath ? 'pointer' : 'not-allowed', transition: 'all 0.2s', opacity: pdfPath ? 1 : 0.5
+            }}
           >
-            <Download className="w-4 h-4" />
+            <Download size={16} />
             Download PDF
           </button>
           <button
             onClick={onRegenerate}
-            className="neu-btn flex items-center gap-2 text-sm bg-card text-foreground"
+            onMouseEnter={e => { e.currentTarget.style.background = C.accentHov; e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = `0 6px 20px ${C.accent}40`; }}
+            onMouseLeave={e => { e.currentTarget.style.background = C.accent; e.currentTarget.style.transform = 'none'; e.currentTarget.style.boxShadow = `0 4px 14px ${C.accent}30`; }}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8, background: C.accent, color: '#fff',
+              border: 'none', borderRadius: 12, padding: '10px 18px', fontFamily: 'Montserrat, sans-serif',
+              fontWeight: 700, fontSize: 13.5, cursor: 'pointer', transition: 'all 0.2s cubic-bezier(.4,0,.2,1)',
+              boxShadow: `0 4px 14px ${C.accent}30`
+            }}
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw size={16} />
             Regenerate
           </button>
         </div>
       </div>
 
-      <div className="max-h-[400px] overflow-y-auto pr-2 space-y-5 text-sm">
+      <div style={{ maxHeight: 500, overflowY: 'auto', paddingRight: 10 }}>
         {/* Name */}
-        <h3 className="text-2xl font-bold text-foreground">{resumeData.name}</h3>
+        <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 32, color: C.ink, margin: '0 0 24px', letterSpacing: '-1px' }}>{resumeData.name}</h3>
 
         {/* Summary */}
         {resumeData.professional_summary && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">Summary</h4>
-            <p className="text-foreground/80 leading-relaxed">{resumeData.professional_summary}</p>
+          <div style={{ marginBottom: 28 }}>
+            <h4 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 800, color: C.accent, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 10 }}>Summary</h4>
+            <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14.5, color: C.muted, lineHeight: 1.6, margin: 0 }}>{resumeData.professional_summary}</p>
           </div>
         )}
 
         {/* Skills */}
         {resumeData.skills && resumeData.skills.length > 0 && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Skills</h4>
-            <div className="flex flex-wrap gap-2">
+          <div style={{ marginBottom: 28 }}>
+            <h4 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 800, color: C.accent, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 12 }}>Skills</h4>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
               {resumeData.skills.map((skill: string) => (
                 <span
                   key={skill}
-                  className="rounded-full px-3 py-1 text-xs font-medium bg-muted text-foreground transition-transform duration-200 hover:scale-110 cursor-default"
+                  style={{
+                    background: C.accentSoft, color: C.accent, borderRadius: 8, padding: '6px 14px',
+                    fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 700,
+                  }}
                 >
                   {skill}
                 </span>
@@ -70,21 +100,20 @@ const GeneratedResume = ({ resumeData, pdfPath, onRegenerate }: GeneratedResumeP
 
         {/* Experience */}
         {resumeData.experience && resumeData.experience.length > 0 && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Experience</h4>
-            <div className="space-y-4">
+          <div style={{ marginBottom: 28 }}>
+            <h4 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 800, color: C.accent, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 16 }}>Experience</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
               {resumeData.experience.map((exp: any, idx: number) => (
-                <div key={idx}>
-                  <div className="flex justify-between items-baseline">
-                    <p className="font-semibold text-foreground">{exp.role}</p>
-                    <span className="text-xs text-muted-foreground">{exp.period || exp.duration || ""}</span>
+                <div key={idx} style={{ background: C.paper, border: `1px solid ${C.border}`, borderRadius: 16, padding: '20px 24px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+                    <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 16, color: C.ink, margin: 0 }}>{exp.role}</p>
+                    <span style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 12.5, color: C.muted, fontWeight: 600, background: C.surface, padding: '4px 10px', borderRadius: 6, border: `1px solid ${C.border}` }}>{exp.period || exp.duration || ""}</span>
                   </div>
-                  <p className="text-muted-foreground text-xs mb-1">{exp.company}</p>
-                  <ul className="list-disc list-inside space-y-0.5 text-foreground/75">
+                  <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: C.accent, fontWeight: 600, margin: '0 0 12px' }}>{exp.company}</p>
+                  <ul style={{ margin: 0, paddingLeft: 18, color: C.muted, fontFamily: 'Montserrat, sans-serif', fontSize: 14, lineHeight: 1.6 }}>
                     {exp.bullets?.map((b: string, i: number) => (
-                      <li key={i}>{b}</li>
+                      <li key={i} style={{ marginBottom: 6 }}>{b}</li>
                     ))}
-                    {/* Fallback if bullets is not an array but purely description */}
                     {!exp.bullets && exp.description && <li>{exp.description}</li>}
                   </ul>
                 </div>
@@ -95,17 +124,17 @@ const GeneratedResume = ({ resumeData, pdfPath, onRegenerate }: GeneratedResumeP
 
         {/* Projects */}
         {resumeData.projects && resumeData.projects.length > 0 && (
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Projects</h4>
-            <div className="space-y-2">
+          <div style={{ marginBottom: 28 }}>
+            <h4 style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 13, fontWeight: 800, color: C.accent, textTransform: 'uppercase', letterSpacing: '1px', marginBottom: 16 }}>Projects</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
               {resumeData.projects.map((p: any, idx: number) => (
-                <div key={idx}>
-                  <p className="font-semibold text-foreground">{p.name || p.title}</p>
-                  <p className="text-foreground/70 text-xs">{p.desc || p.description}</p>
+                <div key={idx} style={{ background: C.paper, border: `1px solid ${C.border}`, borderRadius: 16, padding: '18px 22px' }}>
+                  <p style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 800, fontSize: 15, color: C.ink, margin: '0 0 6px' }}>{p.name || p.title}</p>
+                  <p style={{ fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: C.muted, margin: '0 0 10px', lineHeight: 1.5 }}>{p.desc || p.description}</p>
                   {p.bullets && (
-                    <ul className="list-disc list-inside space-y-0.5 text-foreground/75 mt-1">
+                    <ul style={{ margin: 0, paddingLeft: 18, color: C.muted, fontFamily: 'Montserrat, sans-serif', fontSize: 13.5, lineHeight: 1.6 }}>
                       {p.bullets.map((b: string, i: number) => (
-                        <li key={i}>{b}</li>
+                        <li key={i} style={{ marginBottom: 4 }}>{b}</li>
                       ))}
                     </ul>
                   )}
