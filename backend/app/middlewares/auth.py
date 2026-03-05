@@ -11,7 +11,9 @@ class AuthMiddleware(BaseHTTPMiddleware):
             "/auth",
             "/docs",
             "/openapi.json",
-            "/redoc"
+            "/redoc",
+            "/api/extract",
+            "/api/download"
         )
 
         if request.url.path.startswith(public_paths):
@@ -26,7 +28,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
             payload = verify_token(token)
             request.state.user = payload
 
-        except Exception:
+        except Exception as e:
+            print(f"Token validation error: {e}")
             return JSONResponse(status_code=401, content={"detail": "Invalid or expired token"})
 
         response = await call_next(request)

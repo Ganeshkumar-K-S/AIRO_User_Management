@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { Upload, Link, FileText, Loader2 } from "lucide-react";
+import { getAuth } from "@/lib/api";
 
 const tabs = ["Text", "EML", "PDF", "DOCX", "URL"] as const;
 type TabType = (typeof tabs)[number];
@@ -78,10 +79,12 @@ const JDSection = ({ onGenerate, isGenerating, setIsGenerating }: JDSectionProps
       }
 
       const backendUrl = process.env.NEXT_PUBLIC_JD_BACKEND_URL || "http://localhost:8000";
+      const auth = getAuth();
       const response = await fetch(`${backendUrl}/api/extract`, {
         method: "POST",
         headers: {
           "x-api-key": process.env.NEXT_PUBLIC_API_SECRET_KEY ?? "",
+          ...(auth?.token ? { "Authorization": `Bearer ${auth.token}` } : {})
         },
         body: formData,
       });
