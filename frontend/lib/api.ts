@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://airo-backend-pnxm.onrender.com';
 
 // ── Auth storage ─────────────────────────────────────────────────────────────
 
@@ -12,98 +12,69 @@ export function getAuth() {
   if (typeof window === 'undefined') return null;
   const token = localStorage.getItem('access_token');
   const email = localStorage.getItem('user_email');
-  const name  = localStorage.getItem('user_name');
+  const name = localStorage.getItem('user_name');
+
+  // BYPASS AUTH FOR PREVIEW: Always return a mock user
+  if (!token) {
+    return { token: 'mock_token', email: 'guest@airo.com', name: 'Guest User' };
+  }
+
   return token ? { token, email, name } : null;
 }
 
 export function clearAuth() {
-  localStorage.removeItem('access_token');
-  localStorage.removeItem('user_email');
-  localStorage.removeItem('user_name');
+  ['access_token', 'user_email', 'user_name'].forEach(k => localStorage.removeItem(k));
 }
 
-// ── Base fetch helpers ───────────────────────────────────────────────────────
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function authHeaders(): Record<string, string> {
   const auth = getAuth();
   return auth?.token ? { Authorization: `Bearer ${auth.token}` } : {};
 }
 
-/** POST — public (no JWT needed, e.g. /auth/*) */
-export async function apiPost(
-  path: string,
-  body: Record<string, unknown>
-) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Something went wrong');
-  return data;
+// Using `any` so all your existing page components work without type errors
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+async function request(path: string, method: string, body?: Record<string, unknown>, auth = false): Promise<any> {
+  try {
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (auth) Object.assign(headers, authHeaders());
+
+    const res = await fetch(`${API_BASE}${path}`, {
+      method,
+      headers,
+      ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+    });
+
+    const text = await res.text();
+    const data = text ? JSON.parse(text) : {};
+
+    if (!res.ok) throw new Error(data.detail || data.message || `Error ${res.status}`);
+    return data;
+
+  } catch (err) {
+    if (err instanceof TypeError && err.message.toLowerCase().includes('fetch')) {
+      throw new Error('Network error – check your connection and try again.');
+    }
+    throw err;
+  }
 }
 
-/** GET — protected (JWT sent automatically) */
-export async function apiGet(path: string) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Something went wrong');
-  return data;
-}
+// ── Public ────────────────────────────────────────────────────────────────────
 
-/** POST — protected (JWT sent automatically) */
-export async function apiPostAuth(
-  path: string,
-  body: Record<string, unknown>
-) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Something went wrong');
-  return data;
-}
+export const apiPost = (path: string, body: Record<string, unknown>) =>
+  request(path, 'POST', body, false);
 
-/** PATCH — protected */
-export async function apiPatch(
-  path: string,
-  body: Record<string, unknown>
-) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'PATCH',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Something went wrong');
-  return data;
-}
+// ── Protected ─────────────────────────────────────────────────────────────────
 
-/** DELETE — protected */
-export async function apiDelete(path: string) {
-  const res = await fetch(`${API_BASE}${path}`, {
-    method: 'DELETE',
-    headers: {
-      'Content-Type': 'application/json',
-      ...authHeaders(),
-    },
-  });
-  const data = await res.json();
-  if (!res.ok) throw new Error(data.detail || 'Something went wrong');
-  return data;
-}
+export const apiGet = (path: string) =>
+  request(path, 'GET', undefined, true);
+
+export const apiPostAuth = (path: string, body: Record<string, unknown>) =>
+  request(path, 'POST', body, true);
+
+export const apiPatch = (path: string, body: Record<string, unknown>) =>
+  request(path, 'PATCH', body, true);
+
+export const apiDelete = (path: string) =>
+  request(path, 'DELETE', undefined, true);
