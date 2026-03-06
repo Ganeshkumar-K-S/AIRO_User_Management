@@ -1,12 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException
-from backend.app.db.connection import get_db
-from backend.app.models.auth_models import LoginRequest, SendOTP, SignupRequest
+from app.db.connection import get_db
+from app.models.auth_models import LoginRequest, SendOTP, SignupRequest
 from motor.motor_asyncio import AsyncIOMotorDatabase
 from typing import Annotated
-from backend.app.services.otp_service import create_otp, verify_otp, send_otp_email
+from app.services.otp_service import create_otp, verify_otp, send_otp_email
 from datetime import datetime
-from backend.app.utils.hash import hash_password, verify_password
-from backend.app.utils.jwt_handler import create_token
+from app.utils.hash import hash_password, verify_password
+from app.utils.jwt_handler import create_token
 
 auth_router = APIRouter(prefix = '/auth')
 
@@ -15,12 +15,6 @@ async def login(
     data : LoginRequest, 
     db : Annotated[AsyncIOMotorDatabase, Depends(get_db)]
 ):
-    if data.email == "test@example.com" and data.password == "admin":
-        return {
-            "access_token" : create_token({"email": data.email}),
-            "message" : "Mock login successful"
-        }
-
     user = await db.users.find_one({"email" : data.email})
 
     if not user:

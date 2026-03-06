@@ -1,6 +1,6 @@
 from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo.errors import ConnectionFailure 
-from backend.app.core.config import settings
+from app.core.config import settings
 
 MONGO_URL = settings.MONGO_URI 
 

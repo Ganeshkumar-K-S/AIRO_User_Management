@@ -3,12 +3,12 @@ from typing import List, Optional
 from datetime import datetime
 
 class EducationModel(BaseModel):
-    degree: str
+    degree: str 
     branch: str
-    institution: str
-    cgpa: Optional[float] = None
-    start_year: Optional[int] = None
-    end_year: Optional[int] = None
+    institution : str 
+    cgpa: float | None 
+    start_year: int | None 
+    end_year: int | None 
 
 class Skill(BaseModel):
     name: str
@@ -28,11 +28,11 @@ class Achievement(BaseModel):
     date: Optional[datetime] = None
 
 class Experience(BaseModel):
-    role: Optional[str] = None
-    company: Optional[str] = None
-    start_date: Optional[datetime] = None
-    end_date: Optional[datetime] = None
-    description: Optional[str] = None
+    role: Optional[str]
+    company: Optional[str]
+    start_date: Optional[datetime]
+    end_date: Optional[datetime]
+    description: Optional[str]
 
 class Certification(BaseModel):
     title: Optional[str]
@@ -50,17 +50,3 @@ class ProfileUpdate(BaseModel):
     experience: Optional[List[Experience]] = None
     certifications: Optional[List[Certification]] = None
     education: Optional[List[EducationModel]] = None
-
-
-class LeetcodeCodeRequest(BaseModel):
-    leetcode_id: str 
-
-class LeetcodeLinkRequest(BaseModel):
-    leetcode_id: str 
-    code: str 
-
-class LinkedinAddRequest(BaseModel):
-    linkedin_url: str
-
-class SummaryUpdate(BaseModel):
-    professional_summary: str

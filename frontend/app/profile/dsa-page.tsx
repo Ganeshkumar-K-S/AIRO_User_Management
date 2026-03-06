@@ -28,18 +28,18 @@ interface LeetCodeData {
 
 /* ── DESIGN SYSTEM ── */
 const C = {
-  ink:        '#0f172a',
-  paper:      '#f8fafc',
-  surface:    '#ffffff',
-  accent:     '#7c3aed',
-  accentHov:  '#6d28d9',
+  ink: '#0f172a',
+  paper: '#f8fafc',
+  surface: '#ffffff',
+  accent: '#7c3aed',
+  accentHov: '#6d28d9',
   accentSoft: '#ede9fe',
-  accent2:    '#ef4444',
-  muted:      '#64748b',
-  border:     '#e2e8f0',
-  success:    '#16a34a',
-  orange:     '#f97316',
-  yellow:     '#eab308',
+  accent2: '#ef4444',
+  muted: '#64748b',
+  border: '#e2e8f0',
+  success: '#16a34a',
+  orange: '#f97316',
+  yellow: '#eab308',
 };
 
 /* ── SCROLL REVEAL ── */
@@ -74,7 +74,7 @@ export function Navbar({ active }: { active?: string }) {
         <button key={label} onClick={() => {
           if (label === 'Dashboard') router.push('/home');
           if (label === 'Development') router.push('/development');
-          if (label === 'Resume Builder') router.push('/profile/ml');
+          if (label === 'Resume Builder') router.push('/resume');
           if (label === 'DSA') router.push('/dsa');
         }} style={{ background: 'none', border: 'none', cursor: 'pointer', fontFamily: 'Montserrat, sans-serif', fontSize: 14, color: active === label ? C.accent : C.muted, fontWeight: active === label ? 700 : 500, borderBottom: active === label ? `2.5px solid ${C.accent}` : '2.5px solid transparent', paddingBottom: 4, transition: 'all 0.2s' }}>
           {label}
@@ -117,9 +117,9 @@ function DonutChart({ easy, medium, hard, total }: { easy: number; medium: numbe
   const safe = total || 1;
   let offset = 0;
   const segs = [
-    { val: easy,   color: C.success,  label: 'Easy' },
+    { val: easy, color: C.success, label: 'Easy' },
     { val: medium, color: C.orange, label: 'Medium' },
-    { val: hard,   color: C.accent2, label: 'Hard' },
+    { val: hard, color: C.accent2, label: 'Hard' },
   ].map(s => {
     const dash = circ * (s.val / safe);
     const arc = { dash, offset: -offset, color: s.color, val: s.val, label: s.label };
@@ -232,7 +232,7 @@ function LeetCodeBanner({ leetcode }: { leetcode: LeetCodeData }) {
 function BadgesSection({ badges }: { badges: { name: string; icon?: string }[] }) {
   const reveal = useScrollReveal(140);
   if (!badges || badges.length === 0) return null;
-  
+
   return (
     <div ref={reveal.ref} style={{ ...reveal.style, background: C.surface, border: `1px solid ${C.border}`, borderRadius: 24, padding: '28px 32px', boxShadow: '0 4px 18px rgba(15,23,42,0.06)', marginBottom: 40 }}>
       <h3 style={{ fontFamily: 'Montserrat, sans-serif', fontWeight: 900, fontSize: 18, color: C.ink, margin: '0 0 20px' }}>Badges & Achievements</h3>
@@ -362,7 +362,7 @@ export default function DsaPage() {
       const data = await apiGet(`/form/get-profile/${encodeURIComponent(email)}`);
       setProfile({ full_name: data.full_name, phone: data.phone, location: data.location });
       if (data.leetcode) setLeetcode(data.leetcode);
-    } catch {}
+    } catch { }
   }, []);
 
   useEffect(() => {

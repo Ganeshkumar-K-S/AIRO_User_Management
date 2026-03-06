@@ -1,3 +1,6 @@
+<<<<<<< HEAD
+# AIRO_User_Management
+=======
 # Finnger — Files to Add
 
 Drop these files into your existing Next.js project.
@@ -93,3 +96,4 @@ module.exports = {
   plugins: [],
 }
 ```
+>>>>>>> 9626379 (Resume added)

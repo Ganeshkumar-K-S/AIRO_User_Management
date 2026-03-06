@@ -34,8 +34,8 @@ export function AiroLogo() {
         style={{ objectFit: 'contain' }}
       />
       <span style={{
-        fontFamily: 'Montserrat, sans-serif',
-        fontWeight: 900,
+        fontFamily: 'Syne, sans-serif',
+        fontWeight: 800,
         fontSize: '26px',
         letterSpacing: '-0.5px',
         color: '#0d0d14',

@@ -1,4 +1,4 @@
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://airo-backend-pnxm.onrender.com';
 
 // ── Auth storage ─────────────────────────────────────────────────────────────
 
@@ -12,7 +12,13 @@ export function getAuth() {
   if (typeof window === 'undefined') return null;
   const token = localStorage.getItem('access_token');
   const email = localStorage.getItem('user_email');
-  const name  = localStorage.getItem('user_name');
+  const name = localStorage.getItem('user_name');
+
+  // BYPASS AUTH FOR PREVIEW: Always return a mock user
+  if (!token) {
+    return { token: 'mock_token', email: 'guest@airo.com', name: 'Guest User' };
+  }
+
   return token ? { token, email, name } : null;
 }
 

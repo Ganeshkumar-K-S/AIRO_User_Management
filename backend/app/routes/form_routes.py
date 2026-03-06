@@ -1,25 +1,15 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import JSONResponse
-from backend.app.models.form_models import EducationModel, ProfileUpdate, LeetcodeCodeRequest, LeetcodeLinkRequest, LinkedinAddRequest, SummaryUpdate
-from backend.app.models.dev_models import GithubLinkRequest, GithubCodeRequest
+from app.models.form_models import EducationModel, ProfileUpdate
+from app.models.dev_models import GithubLinkRequest, GithubCodeRequest
 from typing import Annotated, List
 from motor.motor_asyncio import AsyncIOMotorDatabase
-from backend.app.db.connection import get_db
-from backend.app.services.external_fetch.github_fetch import fetch_github
-from backend.app.services.external_fetch.leetcode_fetch import fetch_leetcode
+from app.db.connection import get_db
+from app.services.external_fetch.github_fetch import fetch_github
 import random
 import string
 from datetime import datetime
-import httpx
-
 form_router = APIRouter(prefix = "/form")
-
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
-GITHUB_TOKEN = os.getenv("GITHUB_TOKEN")
 
 @form_router.get("/education/{email}")
 async def get_education(
@@ -85,11 +75,6 @@ async def update_profile(
         if not update_data:
             raise HTTPException(400, "No data provided")
 
-        if email == "test@example.com":
-            for key, val in update_data.items():
-                MOCK_USER_DATA[key] = val
-            return {"message": "Mock profile updated successfully"}
-
         await db.users.update_one(
             {"email": email},
             {"$set": update_data}
@@ -102,30 +87,13 @@ async def update_profile(
 
     except Exception as e:
         raise HTTPException(500, f"Server error: {str(e)}")  
-# MOCK DATABASE FOR TESTING WITHOUT MONGODB
-MOCK_USER_DATA = {
-    "full_name": "Test User",
-    "email": "test@example.com",
-    "phone": "9876543210",
-    "location": "Developer City",
-    "education": [],
-    "skills": [],
-    "projects": [],
-    "experience": [],
-    "certifications": [],
-    "achievements": [],
-}
-MOCK_VERIFICATION = {}
-
+    
 @form_router.get("/get-profile/{email}")
 async def get_profile(
     email: str,
     db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
 ):
     try:
-        if email == "test@example.com":
-            return dict(MOCK_USER_DATA)
-
         user_data = await db.users.find_one({"email": email})
 
         if not user_data:
@@ -165,11 +133,6 @@ async def get_git_code(
 ):
     email = request.state.user["email"]
 
-    if email == "test@example.com":
-        MOCK_VERIFICATION["github_id"] = data.github_id
-        MOCK_VERIFICATION["github_code"] = "123456" # Fixed code for easy testing
-        return {"verification_code": "123456"}
-
     code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
 
     await db.github_verification.update_one(
@@ -196,15 +159,6 @@ async def link_github(
     try:
         email = request.state.user["email"]
 
-        if email == "test@example.com":
-            github_data = await fetch_github(data.github_id)
-            if not github_data or "error" in github_data:
-                raise HTTPException(404, "GitHub user not found")
-            
-            # Bypass bio verification entirely for the mock user to make testing super fast
-            MOCK_USER_DATA["github"] = github_data
-            return {"message": "Mock GitHub linked successfully!"}
-
         record = await db.github_verification.find_one({
             "email": email,
             "github_id": data.github_id,
@@ -215,9 +169,6 @@ async def link_github(
             raise HTTPException(400, "Invalid verification code")
 
         github_data = await fetch_github(data.github_id)
-
-        github_data = await fetch_github(data.github_id)
-        print("GITHUB RESPONSE:", github_data)
 
         if not github_data or "error" in github_data:
             raise HTTPException(404, "GitHub user not found")
@@ -300,357 +251,6 @@ async def update_github(
         return JSONResponse(
             status_code=e.status_code,
             content={"message": e.detail}  # BUG FIX: was str(e), now e.detail
-        )
-
-    except Exception:
-        return JSONResponse(
-            status_code=500,
-            content={"message": "Internal server error"}
-        )
-    
-@form_router.post("/leetcode/getcode")
-async def get_leetcode_code(
-    data: LeetcodeCodeRequest,
-    request: Request,
-    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
-):
-    email = request.state.user["email"]
-
-    if email == "test@example.com":
-        MOCK_VERIFICATION["leetcode_id"] = data.leetcode_id
-        MOCK_VERIFICATION["leetcode_code"] = "123456"
-        return {"verification_code": "123456"}
-
-    code = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-
-    await db.leetcode_verification.update_one(
-        {"email": email},
-        {
-            "$set": {
-                "email": email,
-                "leetcode_id": data.leetcode_id,
-                "code": code,
-                "created_at": datetime.utcnow()
-            }
-        },
-        upsert=True
-    )
-
-    return {"verification_code": code}
-
-@form_router.post("/leetcode/link")
-async def link_leetcode(
-    data: LeetcodeLinkRequest,
-    request: Request,
-    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
-):
-    try:
-        email = request.state.user["email"]
-
-        if email == "test@example.com":
-            leetcode_data = await fetch_leetcode(data.leetcode_id)
-            if not leetcode_data or "error" in leetcode_data:
-                raise HTTPException(404, "LeetCode user not found")
-            
-            MOCK_USER_DATA["leetcode"] = leetcode_data
-            return {"message": "Mock LeetCode linked successfully"}
-
-        record = await db.leetcode_verification.find_one({
-            "email": email,
-            "leetcode_id": data.leetcode_id,
-            "code": data.code
-        })
-
-        if not record:
-            raise HTTPException(400, "Invalid verification code")
-
-        leetcode_data = await fetch_leetcode(data.leetcode_id)
-
-        if not leetcode_data or "error" in leetcode_data:
-            raise HTTPException(404, "LeetCode user not found")
-
-        bio = leetcode_data.get("about") or ""
-
-        if data.code not in bio:
-            raise HTTPException(401, "Code not found in LeetCode bio")
-
-        await db.dev.update_one(
-            {"email": email},
-            {
-                "$set": {
-                    "email": email,
-                    "leetcode": leetcode_data,
-                    "updated_at": datetime.utcnow()
-                },
-                "$setOnInsert": {
-                    "created_at": datetime.utcnow()
-                }
-            },
-            upsert=True
-        )
-
-        await db.leetcode_verification.delete_many({"email": email})
-
-        return {"message": "LeetCode linked successfully"}
-
-    except HTTPException as e:
-        return JSONResponse(
-            status_code=e.status_code,
-            content={"message": e.detail}
-        )
-
-    except Exception as e:
-        return JSONResponse(
-            status_code=500,
-            content={"message": f"Internal server error: {str(e)}"}
-        )
-    
-@form_router.patch("/leetcode/update")
-async def update_leetcode(
-    request: Request,
-    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
-):
-    try:
-        email = request.state.user["email"]
-
-        record = await db.dev.find_one({"email": email})
-
-        if not record or "leetcode" not in record:
-            raise HTTPException(404, "LeetCode account not linked")
-
-        leetcode_id = record["leetcode"]["username"]
-
-        leetcode_data = await fetch_leetcode(leetcode_id)
-
-        if not leetcode_data or "error" in leetcode_data:
-            raise HTTPException(404, "LeetCode user not found")
-
-        await db.dev.update_one(
-            {"email": email},
-            {
-                "$set": {
-                    "leetcode": leetcode_data,
-                    "updated_at": datetime.utcnow()
-                }
-            }
-        )
-
-        return {"message": "LeetCode data updated successfully"}
-
-    except HTTPException as e:
-        return JSONResponse(
-            status_code=e.status_code,
-            content={"message": e.detail}
-        )
-
-    except Exception:
-        return JSONResponse(
-            status_code=500,
-            content={"message": "Internal server error"}
-        )
-    
-@form_router.post("/linkedin/add")
-async def add_linkedin(
-    data: LinkedinAddRequest,
-    request: Request,
-    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
-):
-    try:
-        email = request.state.user["email"]
-
-        await db.dev.update_one(
-            {"email": email},
-            {
-                "$set": {
-                    "email": email,
-                    "linkedin": data.linkedin_url,
-                    "updated_at": datetime.utcnow()
-                },
-                "$setOnInsert": {
-                    "created_at": datetime.utcnow()
-                }
-            },
-            upsert=True
-        )
-
-        return {"message": "LinkedIn link added successfully"}
-
-    except Exception:
-        return JSONResponse(
-            status_code=500,
-            content={"message": "Internal server error"}
-        )
-    
-@form_router.get("/generate")
-async def generate_profile(
-    request: Request,
-    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
-):
-    try:
-        email = request.state.user["email"]
-
-        user = await db.users.find_one({"email": email})
-        dev = await db.dev.find_one({"email": email})
-
-        if not user:
-            raise HTTPException(404, "User not found")
-
-        def safe(val, default):
-            return val if val else default
-
-        profile = {
-            "id": str(user.get("_id", "")),
-            "name": safe(user.get("full_name"), ""),
-            "phone": safe(user.get("phone"), ""),
-            "email": safe(user.get("email"), ""),
-
-            "github": safe(dev.get("github", {}).get("username") if dev else "", ""),
-            "linkedin": safe(user.get("links", {}).get("linkedin"), ""),
-
-            "professional_summary": "",
-
-            "education": safe(user.get("education"), []),
-
-            "skills": [s.get("name") for s in user.get("skills", [])] if user.get("skills") else [],
-
-            "skills_categorized": {},
-
-            "experience": safe(user.get("experience"), []),
-
-            "projects": safe(user.get("projects"), []),
-
-            "certifications": safe(user.get("certifications"), []),
-
-            "achievements": safe(user.get("achievements"), [])
-        }
-
-        return profile
-
-    except HTTPException as e:
-        return JSONResponse(
-            status_code=e.status_code,
-            content={"message": e.detail}
-        )
-
-    except Exception:
-        return JSONResponse(
-            status_code=500,
-            content={"message": "Internal Server Error"}
-        )
-
-@form_router.get("/github/contributions/{username}")
-async def get_contributions(username: str):
-    from backend.app.core.config import settings
-
-    query = """
-    query($login: String!) {
-      user(login: $login) {
-        contributionsCollection {
-          contributionCalendar {
-            totalContributions
-            weeks {
-              contributionDays {
-                date
-                contributionCount
-                contributionLevel
-              }
-            }
-          }
-        }
-      }
-    }
-    """
-
-    LEVEL_MAP = {
-        "NONE":           0,
-        "FIRST_QUARTILE": 1,
-        "SECOND_QUARTILE": 2,
-        "THIRD_QUARTILE": 3,
-        "FOURTH_QUARTILE": 4,
-    }
-
-    headers = {
-        "Authorization": f"bearer {GITHUB_TOKEN}",
-        "Content-Type": "application/json",
-    }
-
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            res = await client.post(
-                "https://api.github.com/graphql",
-                json={"query": query, "variables": {"login": username}},
-                headers=headers,
-            )
-
-        if res.status_code != 200:
-            raise HTTPException(502, "GitHub API error")
-
-        data = res.json()
-
-        if "errors" in data:
-            raise HTTPException(404, "GitHub user not found")
-
-        calendar = (
-            data["data"]["user"]["contributionsCollection"]["contributionCalendar"]
-        )
-
-        weeks = []
-        for week in calendar["weeks"]:
-            days = []
-            for day in week["contributionDays"]:
-                days.append({
-                    "date":  day["date"],
-                    "count": day["contributionCount"],
-                    "level": LEVEL_MAP.get(day["contributionLevel"], 0),
-                })
-            weeks.append({"days": days})
-
-        return {
-            "total_contributions": calendar["totalContributions"],
-            "weeks": weeks,
-        }
-
-    except HTTPException:
-        raise
-
-    except httpx.TimeoutException:
-        raise HTTPException(504, "GitHub request timed out")
-
-    except Exception as e:
-        raise HTTPException(500, f"Internal error: {str(e)}")
-    
-
-@form_router.patch("/update-summary")
-async def update_summary(
-    data: SummaryUpdate,
-    request: Request,
-    db: Annotated[AsyncIOMotorDatabase, Depends(get_db)]
-):
-    try:
-        email = request.state.user["email"]
-
-        if not data.professional_summary.strip():
-            raise HTTPException(400, "Summary cannot be empty")
-
-        result = await db.users.update_one(
-            {"email": email},
-            {
-                "$set": {
-                    "professional_summary": data.professional_summary,
-                    "updated_at": datetime.utcnow()
-                }
-            }
-        )
-
-        if result.matched_count == 0:
-            raise HTTPException(404, "User not found")
-
-        return {"message": "Professional summary updated successfully"}
-
-    except HTTPException as e:
-        return JSONResponse(
-            status_code=e.status_code,
-            content={"message": e.detail}
         )
 
     except Exception:

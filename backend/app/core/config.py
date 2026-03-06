@@ -10,9 +10,8 @@ class Settings:
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")
     JWT_ALGO = os.getenv("JWT_ALGO")
     mail_conf = ConnectionConfig(
-        MAIL_USERNAME = os.getenv("MAIL_USERNAME", "test"),
-        MAIL_PASSWORD = os.getenv("MAIL_PASSWORD", "test"),
-        MAIL_FROM = os.getenv("MAIL_FROM", "noreply@airo.com"),
+        MAIL_USERNAME = os.getenv("MAIL_USERNAME"),
+        MAIL_PASSWORD = os.getenv("MAIL_PASSWORD"),
         MAIL_PORT = 587,
         MAIL_SERVER = "smtp.gmail.com",
         MAIL_STARTTLS = True,
