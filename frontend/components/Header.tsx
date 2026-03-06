@@ -1,5 +1,6 @@
 "use client"
 
+import { useRouter } from "next/navigation";
 import { Sparkles, Clock, ArrowLeft } from "lucide-react";
 
 interface HeaderProps {
@@ -8,6 +9,13 @@ interface HeaderProps {
 }
 
 const Header = ({ onHistoryClick, onGoBack }: HeaderProps) => {
+  const router = useRouter();
+
+  const handleGoBack = () => {
+    if (onGoBack) onGoBack();
+    router.push("/home");
+  };
+
   return (
     <header className="home-nav">
       {/* Logo */}
@@ -48,7 +56,7 @@ const Header = ({ onHistoryClick, onGoBack }: HeaderProps) => {
 
         <button
           className="neu-btn"
-          onClick={onGoBack}
+          onClick={handleGoBack}
           style={{
             display: "flex",
             alignItems: "center",
