@@ -13,7 +13,7 @@ app = FastAPI()
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(LoggingMiddleware)
-app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
+app.add_middleware(CORSMiddleware, allow_origins=["http://localhost:3000","https://airo-user-management-k8y9.vercel.app"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
 
 
 app.include_router(auth_router)
